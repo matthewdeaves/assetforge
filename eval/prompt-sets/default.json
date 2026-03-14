@@ -1,6 +1,6 @@
 {
   "name": "default",
-  "description": "Default test prompt set: 10 prompts across 5 categories (2 per category)",
+  "description": "Default test prompt set: 20 prompts across 5 categories (4 per category)",
   "prompts": [
     {
       "prompt": "top-down military tank with visible tracks, hull, and turret",
@@ -17,6 +17,20 @@
       "hint": "Should have wheels, body, windows, and a low sporty profile"
     },
     {
+      "prompt": "top-down blue pickup truck",
+      "width": 64,
+      "height": 64,
+      "category": "vehicles",
+      "hint": "Should have a cab, open truck bed, four wheels visible, and clear front/back orientation"
+    },
+    {
+      "prompt": "side-view yellow school bus",
+      "width": 64,
+      "height": 32,
+      "category": "vehicles",
+      "hint": "Should have a long rectangular body, multiple windows in a row, wheels, and a flat front"
+    },
+    {
       "prompt": "pixel art knight with sword and shield",
       "width": 32,
       "height": 32,
@@ -29,6 +43,20 @@
       "height": 32,
       "category": "characters",
       "hint": "Should have a tall pointed hat, robes, and a staff with a glowing tip"
+    },
+    {
+      "prompt": "skeleton warrior with a bone club",
+      "width": 32,
+      "height": 32,
+      "category": "characters",
+      "hint": "Should have a visible ribcage, skull head, bony limbs, and a crude club weapon"
+    },
+    {
+      "prompt": "small red dragon with wings spread",
+      "width": 32,
+      "height": 32,
+      "category": "characters",
+      "hint": "Should have a reptilian body, two spread wings, a tail, and a head with horns or snout"
     },
     {
       "prompt": "grass ground tile with subtle texture variation",
@@ -45,6 +73,20 @@
       "hint": "Should use blues and white highlights to suggest gentle waves"
     },
     {
+      "prompt": "sandy desert tile with small rocks",
+      "width": 32,
+      "height": 32,
+      "category": "terrain",
+      "hint": "Should use warm yellows and tans with a few darker speckles for pebbles"
+    },
+    {
+      "prompt": "cobblestone road tile",
+      "width": 32,
+      "height": 32,
+      "category": "terrain",
+      "hint": "Should have irregular rounded stone shapes with mortar lines between them"
+    },
+    {
       "prompt": "wooden crate with metal corner brackets",
       "width": 32,
       "height": 32,
@@ -59,6 +101,20 @@
       "hint": "Should have a rounded lid, dark wood body, gold lock and trim details"
     },
     {
+      "prompt": "red health potion bottle",
+      "width": 32,
+      "height": 32,
+      "category": "items",
+      "hint": "Should have a round glass bottle shape with red liquid, a cork, and a small label"
+    },
+    {
+      "prompt": "iron key with ornate handle",
+      "width": 32,
+      "height": 32,
+      "category": "items",
+      "hint": "Should have a long shaft with teeth at one end and a decorative loop handle at the other"
+    },
+    {
       "prompt": "large grey boulder",
       "width": 32,
       "height": 32,
@@ -71,6 +127,20 @@
       "height": 32,
       "category": "obstacles",
       "hint": "Should have a circular canopy with multiple green shades and a small brown trunk visible"
+    },
+    {
+      "prompt": "wooden barrel with metal bands",
+      "width": 32,
+      "height": 32,
+      "category": "obstacles",
+      "hint": "Should have a cylindrical shape with curved wood staves and two or three horizontal metal bands"
+    },
+    {
+      "prompt": "brick wall segment",
+      "width": 32,
+      "height": 32,
+      "category": "obstacles",
+      "hint": "Should have a clear brick pattern with alternating rows, mortar lines, and slight colour variation between bricks"
     }
   ]
 }

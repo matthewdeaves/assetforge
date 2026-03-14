@@ -54,13 +54,23 @@ const DIMENSION_RUBRICS = {
   },
   promptAdherence: {
     name: 'Prompt Adherence',
-    description: 'Does the visual result look like what was requested? Judge what a person would see when looking at the rendered sprite — not what the drawing commands intended to create. If the commands describe a tank but the rendered pixels look like an abstract blob, that is low adherence. Be strict: a 5 means someone unfamiliar with the prompt could identify the subject and its specific features from the pixels alone.',
+    description: `Does the visual result look like what was requested? You MUST judge what the rendered pixels look like to a person — NOT what the drawing commands intended to create. This is the most common error: the commands may describe a tank, but if the rendered result looks like a green rectangle with some lines, that is NOT a tank.
+
+CRITICAL: Imagine showing ONLY the rendered pixel grid to someone who has never seen the prompt. Could they identify the subject? If not, the score cannot be above 3.
+
+Common failure modes to watch for:
+- A "tank" that looks like a green safe or rectangle (score 2-3, not 5)
+- A "water tile" made of straight horizontal lines that don't look like water (score 2, not 5)
+- A "knight" where you can see sword and shield but the figure doesn't read as a person (score 3, not 5)
+- Correct colours for the subject but the shape/silhouette is wrong or ambiguous (score 3, not 4)
+
+Do NOT give credit for intent. Only score what is visually present in the pixels.`,
     anchors: {
       1: 'The rendered sprite bears no visual resemblance to the prompt — a person could not guess the intended subject from the pixels.',
-      2: 'The general category might be guessable (e.g., "some kind of vehicle") but the specific subject is wrong or unrecognizable. Key features mentioned in the prompt are absent.',
-      3: 'The subject is somewhat recognizable but missing important details mentioned in the prompt. A person might guess the subject but would note obvious omissions (e.g., a "tank" with no visible turret, a "knight" with no sword).',
-      4: 'The subject clearly matches the prompt with most requested features visually present and identifiable. Minor details may be missing but the overall impression is correct.',
-      5: 'A person could identify the exact subject and its specific features from the pixels alone — subject, orientation, and key details from the prompt are all visually present and clear.',
+      2: 'The general category might be guessable (e.g., "some kind of vehicle") but the specific subject is wrong or unrecognizable. Key features mentioned in the prompt are absent or the result could easily be mistaken for something else entirely.',
+      3: 'The subject is somewhat recognizable but missing important details mentioned in the prompt, OR the subject is ambiguous — a person might guess correctly but with low confidence. Examples: a tank with no visible turret or tracks, a knight where the figure doesn\'t read as a person, a car where you can\'t tell front from back.',
+      4: 'The subject clearly matches the prompt with most requested features visually present and identifiable. A person unfamiliar with the prompt would likely guess the correct subject. Minor details may be missing but the overall impression is correct.',
+      5: 'A person could confidently identify the exact subject and its specific features from the pixels alone — subject, orientation, distinguishing features, and key details from the prompt are all visually unambiguous.',
     },
   },
 };

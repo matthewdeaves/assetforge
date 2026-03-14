@@ -51,13 +51,13 @@ const DIMENSION_RUBRICS = {
   },
   promptAdherence: {
     name: 'Prompt Adherence',
-    description: 'Does the visual result look like what was requested? Judge the rendered pixels, not intent.',
+    description: 'Does the visual result look like what was requested? Judge the rendered pixels, not intent. Could someone who hasn\'t seen the prompt identify the subject?',
     anchors: {
       1: 'No visual resemblance — can\'t guess the subject from the pixels.',
-      2: 'General category guessable but specific subject unrecognizable.',
-      3: 'Subject somewhat recognizable but missing important prompted details.',
-      4: 'Subject clearly matches with most prompted features visually present.',
-      5: 'Could identify exact subject and specific features from pixels alone.',
+      2: 'General category guessable but specific subject wrong or easily mistaken for something else.',
+      3: 'Subject somewhat recognizable but ambiguous or missing key details from the prompt.',
+      4: 'Subject clearly matches — a person would likely guess correctly. Minor details may be missing.',
+      5: 'Could confidently identify exact subject and specific features from pixels alone.',
     },
   },
 };
