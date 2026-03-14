@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Sprite Editor</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            font-family: 'Monaco', 'Consolas', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #fff; margin-bottom: 5px; }
+        .subtitle { color: #888; margin-bottom: 30px; }
+
+        .tank-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            max-width: 1400px;
+        }
+
+        .sprite-container {
+            background: #2a2a4a;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .sprite-label {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .sprite-label.red { color: #ff4444; }
+        .sprite-label.green { color: #44ff44; }
+        .sprite-label.blue { color: #4488ff; }
+        .sprite-label.yellow { color: #ffdd44; }
+
+        .sprite {
+            display: grid;
+            grid-template-columns: repeat(64, 4px);
+            grid-template-rows: repeat(64, 4px);
+            gap: 0;
+            border: 2px solid #444;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        .sprite .pixel {
+            width: 4px;
+            height: 4px;
+        }
+        .sprite.show-grid .pixel {
+            outline: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        /* Major grid lines every 8 pixels */
+        .sprite.show-grid .pixel.grid-major-x {
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .sprite.show-grid .pixel.grid-major-y {
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .controls {
+            margin: 30px 0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .controls label { color: #aaa; cursor: pointer; }
+        .controls input[type="checkbox"] {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .controls input[type="range"] { width: 150px; }
+        .controls button {
+            background: #4a4a6a;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .controls button:hover { background: #5a5a8a; }
+
+        .palette-display {
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .palette-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .palette-group span { margin-right: 10px; }
+        .palette-swatch {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #666;
+        }
+
+        #export-data {
+            background: #0a0a1a;
+            color: #0f0;
+            padding: 15px;
+            font-size: 11px;
+            max-height: 300px;
+            overflow: auto;
+            white-space: pre;
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tank Sprites</h1>
+    <p class="subtitle">64x64 pixel tanks - Micro Machines style</p>
+
+    <div class="controls">
+        <label>Pixel Size: <span id="size-val">4</span>px</label>
+        <input type="range" id="pixel-size" min="2" max="8" value="4">
+        <label><input type="checkbox" id="show-grid" checked> Show Grid</label>
+        <button onclick="exportJSON()">Export JSON</button>
+        <button onclick="exportC()">Export C Array</button>
+    </div>
+
+    <div class="palette-display" id="palettes"></div>
+
+    <div id="export-data"></div>
+
+    <div class="tank-grid" id="tank-grid"></div>
+
+    <script>
+// Color palettes for each tank
+const PALETTES = {
+    red: {
+        name: 'Red',
+        colors: {
+            0: 'transparent',      // Transparent
+            1: '#1a0000',          // Darkest (black-red)
+            2: '#4a1111',          // Dark shade
+            3: '#881111',          // Mid-dark
+            4: '#cc2222',          // Main color
+            5: '#ff4444',          // Bright
+            6: '#ff8888',          // Highlight
+            7: '#333333',          // Metal dark
+            8: '#555555',          // Metal mid
+            9: '#777777',          // Metal light
+            10: '#999999',         // Metal highlight
+            11: '#222222',         // Track dark
+            12: '#444444',         // Track mid
+            13: '#111111',         // Outline
+        }
+    },
+    green: {
+        name: 'Green',
+        colors: {
+            0: 'transparent',
+            1: '#001a00',
+            2: '#114a11',
+            3: '#118811',
+            4: '#22cc22',
+            5: '#44ff44',
+            6: '#88ff88',
+            7: '#333333',
+            8: '#555555',
+            9: '#777777',
+            10: '#999999',
+            11: '#222222',
+            12: '#444444',
+            13: '#111111',
+        }
+    },
+    blue: {
+        name: 'Blue',
+        colors: {
+            0: 'transparent',
+            1: '#000022',
+            2: '#112255',
+            3: '#224488',
+            4: '#3366cc',
+            5: '#4488ff',
+            6: '#88bbff',
+            7: '#333333',
+            8: '#555555',
+            9: '#777777',
+            10: '#999999',
+            11: '#222222',
+            12: '#444444',
+            13: '#111111',
+        }
+    },
+    yellow: {
+        name: 'Yellow',
+        colors: {
+            0: 'transparent',
+            1: '#1a1500',
+            2: '#4a4011',
+            3: '#887711',
+            4: '#ccaa22',
+            5: '#ffdd44',
+            6: '#ffee88',
+            7: '#333333',
+            8: '#555555',
+            9: '#777777',
+            10: '#999999',
+            11: '#222222',
+            12: '#444444',
+            13: '#111111',
+        }
+    }
+};
+
+// Tank sprite facing UP (64x64)
+// This is the base sprite - we'll rotate for other directions
+function createTankSprite() {
+    const s = new Array(64).fill(null).map(() => new Array(64).fill(0));
+
+    // Helper to draw filled rect
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 64 && x+dx >= 0 && x+dx < 64) {
+                    s[y+dy][x+dx] = c;
+                }
+            }
+        }
+    };
+
+    // === LEFT TRACK ===
+    rect(2, 8, 18, 54, 13);    // Outline
+    rect(3, 9, 16, 52, 11);    // Dark fill
+    rect(4, 10, 14, 50, 12);   // Mid fill
+
+    // Track treads (horizontal lines)
+    for (let i = 0; i < 12; i++) {
+        rect(3, 12 + i*4, 16, 2, 11);
+    }
+
+    // Track wheels (inner detail)
+    rect(6, 12, 10, 46, 7);
+    rect(8, 14, 6, 42, 8);
+
+    // === RIGHT TRACK ===
+    rect(44, 8, 18, 54, 13);
+    rect(45, 9, 16, 52, 11);
+    rect(46, 10, 14, 50, 12);
+
+    for (let i = 0; i < 12; i++) {
+        rect(45, 12 + i*4, 16, 2, 11);
+    }
+
+    rect(48, 12, 10, 46, 7);
+    rect(50, 14, 6, 42, 8);
+
+    // === MAIN BODY ===
+    rect(16, 10, 32, 50, 13);  // Outline
+    rect(17, 11, 30, 48, 2);   // Dark base
+    rect(18, 12, 28, 46, 3);   // Mid color
+    rect(20, 14, 24, 42, 4);   // Main color
+    rect(22, 16, 20, 16, 5);   // Front highlight
+
+    // === TURRET BASE ===
+    rect(18, 22, 28, 28, 2);   // Dark ring
+    rect(20, 24, 24, 24, 3);   // Mid
+    rect(22, 26, 20, 20, 4);   // Main turret
+    rect(24, 28, 16, 12, 5);   // Highlight
+    rect(26, 30, 12, 6, 6);    // Bright spot
+
+    // === GUN BARREL ===
+    rect(26, 1, 12, 28, 13);   // Outline
+    rect(27, 2, 10, 26, 7);    // Dark metal
+    rect(28, 3, 8, 24, 8);     // Mid metal
+    rect(29, 4, 6, 22, 9);     // Light metal
+    rect(30, 5, 4, 20, 10);    // Highlight
+
+    // Barrel muzzle (wider end)
+    rect(24, 1, 16, 6, 13);    // Outline
+    rect(25, 2, 14, 4, 7);
+    rect(26, 3, 12, 2, 9);
+
+    // === DETAILS ===
+    // Rivets on body corners
+    const rivet = (x, y) => {
+        s[y][x] = 8;
+        s[y][x+1] = 9;
+        s[y+1][x] = 7;
+        s[y+1][x+1] = 8;
+    };
+    rivet(19, 13);
+    rivet(42, 13);
+    rivet(19, 54);
+    rivet(42, 54);
+
+    // Exhaust pipes on back
+    rect(22, 56, 6, 6, 7);
+    rect(23, 57, 4, 4, 11);
+    rect(36, 56, 6, 6, 7);
+    rect(37, 57, 4, 4, 11);
+
+    // Hatch on turret
+    rect(29, 32, 6, 6, 7);
+    rect(30, 33, 4, 4, 9);
+
+    return s;
+}
+
+// Rotate sprite 90 degrees clockwise
+function rotateSprite90(sprite) {
+    const size = sprite.length;
+    const rotated = new Array(size).fill(null).map(() => new Array(size).fill(0));
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            rotated[x][size - 1 - y] = sprite[y][x];
+        }
+    }
+    return rotated;
+}
+
+// Generate all rotations
+function generateAllRotations(baseSprite) {
+    const up = baseSprite;
+    const right = rotateSprite90(up);
+    const down = rotateSprite90(right);
+    const left = rotateSprite90(down);
+    return { up, right, down, left };
+}
+
+// Render a sprite to the DOM
+function renderSprite(sprite, palette, container, pixelSize) {
+    container.innerHTML = '';
+    container.style.gridTemplateColumns = `repeat(64, ${pixelSize}px)`;
+    container.style.gridTemplateRows = `repeat(64, ${pixelSize}px)`;
+
+    for (let y = 0; y < 64; y++) {
+        for (let x = 0; x < 64; x++) {
+            const pixel = document.createElement('div');
+            let classes = 'pixel';
+            if (x % 8 === 0) classes += ' grid-major-x';
+            if (y % 8 === 0) classes += ' grid-major-y';
+            pixel.className = classes;
+            pixel.style.width = pixelSize + 'px';
+            pixel.style.height = pixelSize + 'px';
+            const colorIndex = sprite[y][x];
+            const color = palette.colors[colorIndex];
+            pixel.style.backgroundColor = color === 'transparent' ? 'transparent' : color;
+            container.appendChild(pixel);
+        }
+    }
+}
+
+// Initialize
+const baseTank = createTankSprite();
+const rotations = generateAllRotations(baseTank);
+const directions = ['up', 'right', 'down', 'left'];
+const colors = ['red', 'green', 'blue', 'yellow'];
+
+// Store all sprite data for export
+const allSprites = {};
+colors.forEach(color => {
+    allSprites[color] = {};
+    directions.forEach(dir => {
+        allSprites[color][dir] = rotations[dir];
+    });
+});
+
+// Render palette display
+function renderPalettes() {
+    const container = document.getElementById('palettes');
+    container.innerHTML = '';
+    colors.forEach(color => {
+        const group = document.createElement('div');
+        group.className = 'palette-group';
+        group.innerHTML = `<span style="color: ${PALETTES[color].colors[5]}">${PALETTES[color].name}:</span>`;
+        for (let i = 1; i <= 6; i++) {
+            const swatch = document.createElement('div');
+            swatch.className = 'palette-swatch';
+            swatch.style.backgroundColor = PALETTES[color].colors[i];
+            group.appendChild(swatch);
+        }
+        container.appendChild(group);
+    });
+}
+
+// Render all tanks
+function renderAllTanks(pixelSize) {
+    const grid = document.getElementById('tank-grid');
+    grid.innerHTML = '';
+
+    directions.forEach(dir => {
+        colors.forEach(color => {
+            const container = document.createElement('div');
+            container.className = 'sprite-container';
+
+            const label = document.createElement('div');
+            label.className = `sprite-label ${color}`;
+            label.textContent = `${color} - ${dir}`;
+            container.appendChild(label);
+
+            const spriteDiv = document.createElement('div');
+            spriteDiv.className = 'sprite' + (document.getElementById('show-grid').checked ? ' show-grid' : '');
+            container.appendChild(spriteDiv);
+
+            renderSprite(rotations[dir], PALETTES[color], spriteDiv, pixelSize);
+            grid.appendChild(container);
+        });
+    });
+}
+
+// Pixel size control
+document.getElementById('pixel-size').addEventListener('input', (e) => {
+    const size = parseInt(e.target.value);
+    document.getElementById('size-val').textContent = size;
+    renderAllTanks(size);
+});
+
+// Grid toggle
+document.getElementById('show-grid').addEventListener('change', (e) => {
+    document.querySelectorAll('.sprite').forEach(sprite => {
+        sprite.classList.toggle('show-grid', e.target.checked);
+    });
+});
+
+// Export functions
+function exportJSON() {
+    const exportDiv = document.getElementById('export-data');
+    exportDiv.style.display = 'block';
+    exportDiv.textContent = JSON.stringify(allSprites, null, 2);
+}
+
+function exportC() {
+    const exportDiv = document.getElementById('export-data');
+    exportDiv.style.display = 'block';
+
+    let output = '// Tank Sprite Data - 64x64 pixels\n';
+    output += '// Palette indices: 0=transparent, 1-6=tank colors, 7-10=metal, 11-12=tracks, 13=outline\n\n';
+
+    colors.forEach(color => {
+        directions.forEach(dir => {
+            output += `const uint8_t tank_${color}_${dir}[64][64] = {\n`;
+            const sprite = allSprites[color][dir];
+            sprite.forEach((row, i) => {
+                output += '    {' + row.join(',') + '}' + (i < 63 ? ',' : '') + '\n';
+            });
+            output += '};\n\n';
+        });
+    });
+
+    exportDiv.textContent = output;
+}
+
+// Initial render
+renderPalettes();
+renderAllTanks(4);
+    </script>
+</body>
+</html>

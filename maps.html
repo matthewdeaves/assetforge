@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Game - Map Tiles & Obstacles</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            font-family: 'Monaco', 'Consolas', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #fff; margin-bottom: 5px; }
+        h2 { color: #aaa; margin-top: 40px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        h3 { color: #888; margin-top: 20px; }
+        .subtitle { color: #888; margin-bottom: 30px; }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls label { color: #aaa; cursor: pointer; }
+        .controls input[type="checkbox"] { margin-right: 5px; cursor: pointer; }
+        .controls input[type="range"] { width: 120px; }
+        .controls button {
+            background: #4a4a6a;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .controls button:hover { background: #5a5a8a; }
+
+        .tile-section {
+            background: #2a2a4a;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .tile-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .tile-item {
+            text-align: center;
+        }
+        .tile-label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .sprite {
+            display: grid;
+            gap: 0;
+            border: 2px solid #444;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        .sprite.show-grid .pixel {
+            outline: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sprite.show-grid .pixel.grid-major-x {
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .sprite.show-grid .pixel.grid-major-y {
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .map-preview {
+            margin: 20px 0;
+            border: 2px solid #444;
+            display: inline-block;
+        }
+
+        #export-data {
+            background: #0a0a1a;
+            color: #0f0;
+            padding: 15px;
+            font-size: 11px;
+            max-height: 400px;
+            overflow: auto;
+            white-space: pre;
+            display: none;
+            margin-top: 20px;
+        }
+
+        .theme-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .theme-tab {
+            padding: 10px 20px;
+            background: #3a3a5a;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            font-family: inherit;
+        }
+        .theme-tab.active {
+            background: #2a2a4a;
+            color: #fff;
+        }
+        .theme-tab:hover { color: #fff; }
+    </style>
+</head>
+<body>
+    <h1>Map Tiles & Obstacles</h1>
+    <p class="subtitle">32x32 ground tiles, 64x64 obstacles - 5 themed environments</p>
+
+    <div class="controls">
+        <label>Pixel Size: <span id="size-val">4</span>px</label>
+        <input type="range" id="pixel-size" min="2" max="8" value="4">
+        <label><input type="checkbox" id="show-grid" checked> Show Grid</label>
+        <button onclick="exportAllJSON()">Export All JSON</button>
+        <button onclick="exportAllC()">Export All C Arrays</button>
+    </div>
+
+    <div id="export-data"></div>
+
+    <div class="theme-tabs" id="theme-tabs"></div>
+
+    <div id="content"></div>
+
+    <script>
+// ============================================================
+// COLOR PALETTES FOR EACH THEME
+// ============================================================
+const THEMES = {
+    desert: {
+        name: 'Desert',
+        ground: {
+            0: 'transparent',
+            1: '#8B7355',  // Dark sand
+            2: '#A08060',  // Mid sand
+            3: '#C4A574',  // Light sand
+            4: '#D4B896',  // Pale sand
+            5: '#685840',  // Shadow
+            6: '#E8D4B8',  // Highlight
+        },
+        obstacle: {
+            0: 'transparent',
+            1: '#2a1a0a',  // Darkest
+            2: '#4a3520',  // Dark brown
+            3: '#6a5030',  // Mid brown
+            4: '#8a7040',  // Light brown
+            5: '#aa9050',  // Highlight
+            6: '#c4a060',  // Bright
+            7: '#333333',  // Metal dark
+            8: '#555555',  // Metal mid
+            9: '#777777',  // Metal light
+            10: '#999999', // Metal bright
+            11: '#881111', // Danger red
+            12: '#cc2222', // Bright red
+            13: '#111111', // Outline
+        }
+    },
+    grass: {
+        name: 'Grassland',
+        ground: {
+            0: 'transparent',
+            1: '#2d4a1c',  // Dark grass
+            2: '#3d6a2c',  // Mid grass
+            3: '#4d8a3c',  // Light grass
+            4: '#6aaa4c',  // Bright grass
+            5: '#1d3a0c',  // Shadow
+            6: '#8aca6c',  // Highlight
+        },
+        obstacle: {
+            0: 'transparent',
+            1: '#1a2a0a',  // Darkest green
+            2: '#2a4015',  // Dark
+            3: '#3a5520',  // Mid
+            4: '#4a7030',  // Light
+            5: '#5a8540',  // Bright
+            6: '#7aaa50',  // Highlight
+            7: '#4a3520',  // Wood dark
+            8: '#6a5030',  // Wood mid
+            9: '#8a7040',  // Wood light
+            10: '#aa9050', // Wood bright
+            11: '#666666', // Stone dark
+            12: '#888888', // Stone light
+            13: '#111111', // Outline
+        }
+    },
+    snow: {
+        name: 'Arctic',
+        ground: {
+            0: 'transparent',
+            1: '#a0b0c0',  // Dark snow
+            2: '#c0d0e0',  // Mid snow
+            3: '#d8e8f0',  // Light snow
+            4: '#f0f8ff',  // White snow
+            5: '#8090a0',  // Shadow
+            6: '#ffffff',  // Highlight
+        },
+        obstacle: {
+            0: 'transparent',
+            1: '#405060',  // Dark ice
+            2: '#607080',  // Mid ice
+            3: '#8090a0',  // Light ice
+            4: '#a0b0c0',  // Pale ice
+            5: '#c0d0e0',  // Bright
+            6: '#e0f0ff',  // Highlight
+            7: '#333344',  // Metal dark
+            8: '#555566',  // Metal mid
+            9: '#777788',  // Metal light
+            10: '#9999aa', // Metal bright
+            11: '#2244aa', // Ice blue dark
+            12: '#4488ff', // Ice blue bright
+            13: '#111122', // Outline
+        }
+    },
+    urban: {
+        name: 'Urban',
+        ground: {
+            0: 'transparent',
+            1: '#3a3a3a',  // Dark concrete
+            2: '#4a4a4a',  // Mid concrete
+            3: '#5a5a5a',  // Light concrete
+            4: '#6a6a6a',  // Pale concrete
+            5: '#2a2a2a',  // Shadow
+            6: '#7a7a7a',  // Highlight
+        },
+        obstacle: {
+            0: 'transparent',
+            1: '#1a1a1a',  // Darkest
+            2: '#2a2a2a',  // Dark
+            3: '#3a3a3a',  // Mid dark
+            4: '#4a4a4a',  // Mid
+            5: '#5a5a5a',  // Mid light
+            6: '#7a7a7a',  // Light
+            7: '#884422',  // Brick dark
+            8: '#aa6633',  // Brick mid
+            9: '#cc8844',  // Brick light
+            10: '#ddaa66', // Brick bright
+            11: '#ffcc00', // Warning yellow
+            12: '#ffee44', // Bright yellow
+            13: '#000000', // Outline
+        }
+    },
+    swamp: {
+        name: 'Swamp',
+        ground: {
+            0: 'transparent',
+            1: '#2a3020',  // Dark mud
+            2: '#3a4530',  // Mid mud
+            3: '#4a5540',  // Light mud
+            4: '#5a6550',  // Pale mud
+            5: '#1a2010',  // Shadow
+            6: '#6a7560',  // Highlight
+        },
+        obstacle: {
+            0: 'transparent',
+            1: '#1a2010',  // Darkest
+            2: '#2a3520',  // Dark
+            3: '#3a4530',  // Mid
+            4: '#4a5a40',  // Light
+            5: '#5a7050',  // Bright
+            6: '#7a9060',  // Highlight
+            7: '#3a2a1a',  // Dead wood dark
+            8: '#5a4a3a',  // Dead wood mid
+            9: '#7a6a5a',  // Dead wood light
+            10: '#9a8a7a', // Dead wood bright
+            11: '#225522', // Slime dark
+            12: '#44aa44', // Slime bright
+            13: '#0a100a', // Outline
+        }
+    }
+};
+
+// ============================================================
+// GROUND TILE GENERATORS (32x32)
+// ============================================================
+function createGroundTile(type, theme) {
+    const s = new Array(32).fill(null).map(() => new Array(32).fill(0));
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 32 && x+dx >= 0 && x+dx < 32) {
+                    s[y+dy][x+dx] = c;
+                }
+            }
+        }
+    };
+
+    switch(type) {
+        case 'base':
+            // Simple base ground tile
+            rect(0, 0, 32, 32, 2);
+            // Add subtle texture
+            for (let i = 0; i < 20; i++) {
+                const x = Math.floor(Math.random() * 30);
+                const y = Math.floor(Math.random() * 30);
+                s[y][x] = Math.random() > 0.5 ? 3 : 1;
+            }
+            break;
+
+        case 'textured':
+            // More textured ground
+            rect(0, 0, 32, 32, 2);
+            for (let y = 0; y < 32; y++) {
+                for (let x = 0; x < 32; x++) {
+                    const noise = Math.random();
+                    if (noise > 0.85) s[y][x] = 4;
+                    else if (noise > 0.7) s[y][x] = 3;
+                    else if (noise < 0.15) s[y][x] = 1;
+                }
+            }
+            break;
+
+        case 'cracked':
+            // Ground with cracks
+            rect(0, 0, 32, 32, 3);
+            // Horizontal crack
+            rect(4, 14, 24, 1, 5);
+            rect(4, 15, 24, 1, 1);
+            // Vertical crack
+            rect(18, 6, 1, 20, 5);
+            rect(19, 6, 1, 20, 1);
+            // Texture
+            for (let i = 0; i < 15; i++) {
+                const x = Math.floor(Math.random() * 30);
+                const y = Math.floor(Math.random() * 30);
+                s[y][x] = 2;
+            }
+            break;
+
+        case 'path_h':
+            // Horizontal path/road
+            rect(0, 0, 32, 32, 2);
+            rect(0, 10, 32, 12, 1);
+            rect(0, 11, 32, 10, 5);
+            // Dashed line
+            for (let x = 2; x < 32; x += 8) {
+                rect(x, 15, 4, 2, 4);
+            }
+            break;
+
+        case 'path_v':
+            // Vertical path/road
+            rect(0, 0, 32, 32, 2);
+            rect(10, 0, 12, 32, 1);
+            rect(11, 0, 10, 32, 5);
+            // Dashed line
+            for (let y = 2; y < 32; y += 8) {
+                rect(15, y, 2, 4, 4);
+            }
+            break;
+
+        case 'corner':
+            // Path corner
+            rect(0, 0, 32, 32, 2);
+            rect(10, 10, 22, 12, 1);
+            rect(10, 10, 12, 22, 1);
+            rect(11, 11, 20, 10, 5);
+            rect(11, 11, 10, 20, 5);
+            break;
+
+        case 'water':
+            // Water tile (impassable)
+            rect(0, 0, 32, 32, 1);
+            // Waves
+            for (let y = 0; y < 32; y += 6) {
+                for (let x = 0; x < 32; x++) {
+                    const wave = Math.sin((x + y) * 0.3) > 0.3;
+                    if (wave) s[y][x] = 3;
+                    if (wave && y+1 < 32) s[y+1][x] = 4;
+                }
+            }
+            // Highlights
+            rect(8, 12, 6, 2, 6);
+            rect(20, 22, 4, 2, 6);
+            break;
+
+        case 'edge_top':
+            // Edge tile (top of area)
+            rect(0, 0, 32, 32, 2);
+            rect(0, 0, 32, 4, 5);
+            rect(0, 0, 32, 2, 1);
+            break;
+    }
+
+    return s;
+}
+
+// ============================================================
+// OBSTACLE GENERATORS (64x64) - TOP-DOWN VIEW
+// ============================================================
+function createObstacle(type) {
+    const s = new Array(64).fill(null).map(() => new Array(64).fill(0));
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 64 && x+dx >= 0 && x+dx < 64) {
+                    s[y+dy][x+dx] = c;
+                }
+            }
+        }
+    };
+
+    // Helper for filled circle (top-down)
+    const circle = (cx, cy, r, c) => {
+        for (let y = -r; y <= r; y++) {
+            for (let x = -r; x <= r; x++) {
+                if (x*x + y*y <= r*r) {
+                    const px = cx + x;
+                    const py = cy + y;
+                    if (px >= 0 && px < 64 && py >= 0 && py < 64) {
+                        s[py][px] = c;
+                    }
+                }
+            }
+        }
+    };
+
+    // Helper for oval/ellipse
+    const ellipse = (cx, cy, rx, ry, c) => {
+        for (let y = -ry; y <= ry; y++) {
+            for (let x = -rx; x <= rx; x++) {
+                if ((x*x)/(rx*rx) + (y*y)/(ry*ry) <= 1) {
+                    const px = cx + x;
+                    const py = cy + y;
+                    if (px >= 0 && px < 64 && py >= 0 && py < 64) {
+                        s[py][px] = c;
+                    }
+                }
+            }
+        }
+    };
+
+    switch(type) {
+        // === DESTRUCTIBLE OBSTACLES ===
+        case 'crate':
+            // Wooden crate - top-down view (looking at lid)
+            rect(6, 6, 52, 52, 13);    // Outline
+            rect(7, 7, 50, 50, 2);     // Dark wood edge
+            rect(8, 8, 48, 48, 3);     // Mid wood
+            rect(10, 10, 44, 44, 4);   // Light wood top
+
+            // Planks across top (horizontal)
+            rect(8, 18, 48, 3, 2);
+            rect(8, 31, 48, 3, 2);
+            rect(8, 44, 48, 3, 2);
+
+            // Cross braces on lid
+            for (let i = 0; i < 44; i++) {
+                const x1 = 10 + i;
+                const y1 = 10 + i;
+                const y2 = 53 - i;
+                if (x1 < 54 && y1 < 54) { s[y1][x1] = 5; s[y1+1][x1] = 5; }
+                if (x1 < 54 && y2 >= 10) { s[y2][x1] = 5; s[y2-1][x1] = 5; }
+            }
+
+            // Corner metal brackets
+            rect(8, 8, 8, 8, 7); rect(9, 9, 6, 6, 8);
+            rect(48, 8, 8, 8, 7); rect(49, 9, 6, 6, 8);
+            rect(8, 48, 8, 8, 7); rect(9, 49, 6, 6, 8);
+            rect(48, 48, 8, 8, 7); rect(49, 49, 6, 6, 8);
+
+            // Nails
+            s[11][11] = 10; s[11][52] = 10; s[52][11] = 10; s[52][52] = 10;
+            break;
+
+        case 'barrel':
+            // Explosive barrel - top-down view (looking at circular lid)
+            circle(32, 32, 26, 13);    // Outline
+            circle(32, 32, 24, 11);    // Dark red rim
+            circle(32, 32, 22, 12);    // Bright red
+            circle(32, 32, 18, 11);    // Inner dark
+
+            // Metal rim bands (concentric)
+            circle(32, 32, 24, 7);
+            circle(32, 32, 22, 12);
+            circle(32, 32, 20, 7);
+            circle(32, 32, 18, 12);
+
+            // Center cap
+            circle(32, 32, 10, 7);
+            circle(32, 32, 8, 8);
+            circle(32, 32, 6, 9);
+
+            // Warning marks on lid
+            rect(28, 14, 8, 4, 11);
+            rect(28, 46, 8, 4, 11);
+            rect(14, 28, 4, 8, 11);
+            rect(46, 28, 4, 8, 11);
+
+            // Highlight
+            circle(24, 24, 4, 6);
+            break;
+
+        case 'sandbags':
+            // Sandbags - top-down view (oval bags arranged in defensive position)
+            // Back row (3 bags)
+            ellipse(16, 16, 12, 8, 13);
+            ellipse(16, 16, 10, 6, 2);
+            ellipse(16, 16, 8, 4, 3);
+            ellipse(16, 14, 4, 2, 4);
+
+            ellipse(32, 12, 12, 8, 13);
+            ellipse(32, 12, 10, 6, 2);
+            ellipse(32, 12, 8, 4, 3);
+            ellipse(32, 10, 4, 2, 4);
+
+            ellipse(48, 16, 12, 8, 13);
+            ellipse(48, 16, 10, 6, 2);
+            ellipse(48, 16, 8, 4, 3);
+            ellipse(48, 14, 4, 2, 4);
+
+            // Front row (2 bags, offset)
+            ellipse(24, 32, 14, 10, 13);
+            ellipse(24, 32, 12, 8, 2);
+            ellipse(24, 32, 10, 6, 3);
+            ellipse(24, 30, 5, 3, 4);
+
+            ellipse(44, 32, 14, 10, 13);
+            ellipse(44, 32, 12, 8, 2);
+            ellipse(44, 32, 10, 6, 3);
+            ellipse(44, 30, 5, 3, 4);
+
+            // Single bag on top/front
+            ellipse(32, 48, 14, 10, 13);
+            ellipse(32, 48, 12, 8, 2);
+            ellipse(32, 48, 10, 6, 3);
+            ellipse(32, 46, 5, 3, 4);
+            break;
+
+        case 'brick_wall':
+            // Brick wall - top-down view (looking at top of wall)
+            rect(4, 20, 56, 24, 13);   // Outline
+            rect(5, 21, 54, 22, 7);    // Dark brick base
+            rect(6, 22, 52, 20, 8);    // Mid brick
+
+            // Brick pattern on top (running bond)
+            for (let row = 0; row < 2; row++) {
+                const y = 24 + row * 10;
+                const offset = (row % 2) * 13;
+                for (let col = 0; col < 4; col++) {
+                    const x = 8 + offset + col * 26;
+                    if (x + 22 <= 56) {
+                        rect(x, y, 22, 8, 9);
+                        rect(x+1, y+1, 20, 6, 10);
+                        // Mortar gap
+                        rect(x + 22, y, 2, 8, 7);
+                    }
+                }
+            }
+
+            // Shadow on one side (depth)
+            rect(4, 40, 56, 4, 2);
+            rect(4, 20, 4, 24, 2);
+            break;
+
+        case 'bush':
+            // Bush/shrub - top-down view (circular canopy from above)
+            // Irregular foliage shape
+            circle(32, 32, 28, 13);    // Outline
+            circle(32, 32, 26, 1);     // Darkest
+            circle(32, 32, 24, 2);     // Dark
+            circle(32, 32, 20, 3);     // Mid green
+
+            // Leafy clusters (lighter patches)
+            circle(22, 22, 8, 4);
+            circle(40, 26, 10, 4);
+            circle(26, 40, 9, 4);
+            circle(42, 38, 7, 4);
+            circle(32, 28, 6, 5);
+
+            // Highlights
+            circle(20, 20, 4, 5);
+            circle(38, 24, 5, 5);
+            circle(28, 38, 4, 6);
+            circle(44, 40, 3, 5);
+
+            // Some dark gaps (depth)
+            circle(30, 34, 3, 1);
+            circle(36, 28, 2, 1);
+            break;
+
+        case 'fence':
+            // Wooden fence - top-down view (thin line with posts)
+            // Main rail (horizontal)
+            rect(4, 26, 56, 12, 13);   // Outline
+            rect(5, 27, 54, 10, 7);    // Dark wood
+            rect(6, 28, 52, 8, 8);     // Mid wood
+            rect(7, 29, 50, 6, 9);     // Light wood
+
+            // Posts (square, viewed from top)
+            rect(6, 22, 12, 20, 13);
+            rect(7, 23, 10, 18, 7);
+            rect(8, 24, 8, 16, 8);
+            rect(9, 25, 6, 14, 9);
+
+            rect(26, 22, 12, 20, 13);
+            rect(27, 23, 10, 18, 7);
+            rect(28, 24, 8, 16, 8);
+            rect(29, 25, 6, 14, 9);
+
+            rect(46, 22, 12, 20, 13);
+            rect(47, 23, 10, 18, 7);
+            rect(48, 24, 8, 16, 8);
+            rect(49, 25, 6, 14, 9);
+
+            // Post tops (lighter centers)
+            rect(10, 26, 4, 12, 10);
+            rect(30, 26, 4, 12, 10);
+            rect(50, 26, 4, 12, 10);
+            break;
+
+        // === INDESTRUCTIBLE OBSTACLES ===
+        case 'steel_wall':
+            // Steel wall - top-down view (thick metal block)
+            rect(4, 4, 56, 56, 13);    // Outline
+            rect(5, 5, 54, 54, 7);     // Dark metal
+            rect(6, 6, 52, 52, 8);     // Mid metal
+            rect(8, 8, 48, 48, 9);     // Light metal top
+
+            // Raised panels
+            rect(12, 12, 18, 18, 10);
+            rect(34, 12, 18, 18, 10);
+            rect(12, 34, 18, 18, 10);
+            rect(34, 34, 18, 18, 10);
+
+            // Rivets at corners of panels
+            const rivets = [
+                [14, 14], [26, 14], [36, 14], [48, 14],
+                [14, 26], [26, 26], [36, 26], [48, 26],
+                [14, 36], [26, 36], [36, 36], [48, 36],
+                [14, 48], [26, 48], [36, 48], [48, 48],
+            ];
+            rivets.forEach(([x, y]) => {
+                rect(x, y, 4, 4, 7);
+                rect(x+1, y+1, 2, 2, 10);
+            });
+
+            // Edge shadows
+            rect(4, 52, 56, 8, 7);
+            rect(52, 4, 8, 56, 7);
+            break;
+
+        case 'concrete_block':
+            // Concrete block - top-down view
+            rect(6, 6, 52, 52, 13);    // Outline
+            rect(7, 7, 50, 50, 2);     // Dark edge
+            rect(8, 8, 48, 48, 3);     // Mid concrete
+            rect(10, 10, 44, 44, 4);   // Light top
+
+            // Surface texture/weathering
+            for (let i = 0; i < 40; i++) {
+                const x = 12 + Math.floor(Math.random() * 40);
+                const y = 12 + Math.floor(Math.random() * 40);
+                s[y][x] = Math.random() > 0.5 ? 3 : 5;
+            }
+
+            // Cracks on surface
+            for (let i = 0; i < 15; i++) {
+                s[20 + i][24 + Math.floor(i/3)] = 2;
+                s[30 + Math.floor(i/2)][40 + i] = 2;
+            }
+
+            // Edges (depth shadow)
+            rect(6, 50, 52, 8, 2);
+            rect(50, 6, 8, 52, 2);
+            break;
+
+        case 'rock':
+            // Large boulder - top-down view (irregular rounded shape)
+            // Build up irregular shape
+            circle(32, 32, 26, 13);    // Base outline
+            ellipse(28, 30, 24, 22, 2);
+            ellipse(34, 34, 22, 20, 3);
+            ellipse(30, 32, 20, 18, 4);
+            ellipse(32, 30, 16, 14, 5);
+
+            // Irregular edges
+            circle(14, 28, 10, 3);
+            circle(50, 36, 8, 3);
+            circle(28, 52, 9, 3);
+            circle(40, 14, 7, 3);
+
+            // Highlights on top
+            ellipse(26, 26, 8, 6, 6);
+            circle(38, 24, 4, 6);
+
+            // Crevices/dark spots
+            circle(36, 38, 4, 2);
+            circle(24, 36, 3, 2);
+            break;
+
+        case 'water_obstacle':
+            // Deep water - top-down view (already correct)
+            rect(4, 4, 56, 56, 13);
+            circle(32, 32, 28, 1);
+            circle(32, 32, 26, 2);
+
+            // Ripples (concentric)
+            for (let r = 24; r > 4; r -= 6) {
+                for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+                    const x = Math.floor(32 + Math.cos(angle) * r);
+                    const y = Math.floor(32 + Math.sin(angle) * r);
+                    if (x >= 4 && x < 60 && y >= 4 && y < 60) {
+                        s[y][x] = (r % 12 < 6) ? 3 : 4;
+                    }
+                }
+            }
+
+            // Reflections/highlights
+            ellipse(24, 24, 6, 4, 5);
+            ellipse(40, 36, 5, 3, 5);
+            break;
+
+        case 'bunker':
+            // Military bunker - top-down view (fortified structure)
+            rect(6, 6, 52, 52, 13);    // Outline
+            rect(7, 7, 50, 50, 2);     // Dark outer wall
+            rect(10, 10, 44, 44, 3);   // Roof/top
+            rect(14, 14, 36, 36, 4);   // Inner roof area
+
+            // Gun slit (dark opening)
+            rect(26, 6, 12, 14, 13);
+            rect(28, 8, 8, 10, 1);     // Dark interior
+
+            // Reinforced corners
+            rect(6, 6, 12, 12, 7);
+            rect(46, 6, 12, 12, 7);
+            rect(6, 46, 12, 12, 7);
+            rect(46, 46, 12, 12, 7);
+
+            rect(8, 8, 8, 8, 8);
+            rect(48, 8, 8, 8, 8);
+            rect(8, 48, 8, 8, 8);
+            rect(48, 48, 8, 8, 8);
+
+            // Hatch on roof
+            rect(26, 26, 12, 12, 7);
+            rect(28, 28, 8, 8, 8);
+            circle(32, 32, 3, 9);
+            break;
+
+        // === DEBRIS (destroyed state) ===
+        case 'debris':
+            // Rubble - top-down view (scattered pieces)
+            // Various sized chunks
+            ellipse(14, 14, 8, 6, 13);
+            ellipse(14, 14, 6, 4, 3);
+            ellipse(14, 14, 4, 2, 4);
+
+            ellipse(46, 18, 10, 7, 13);
+            ellipse(46, 18, 8, 5, 3);
+            ellipse(46, 18, 5, 3, 5);
+
+            ellipse(20, 44, 12, 8, 13);
+            ellipse(20, 44, 10, 6, 4);
+            ellipse(20, 44, 6, 4, 5);
+
+            ellipse(50, 48, 9, 7, 13);
+            ellipse(50, 48, 7, 5, 3);
+
+            ellipse(34, 30, 7, 5, 13);
+            ellipse(34, 30, 5, 3, 4);
+
+            // Small scattered pieces
+            rect(28, 12, 4, 4, 4);
+            rect(8, 32, 5, 5, 3);
+            rect(54, 34, 4, 4, 4);
+            rect(38, 52, 5, 4, 3);
+            rect(12, 56, 4, 4, 4);
+            rect(44, 8, 4, 4, 3);
+
+            // Dust/small debris
+            s[24][24] = 5; s[40][40] = 5; s[18][50] = 5;
+            s[52][26] = 5; s[30][54] = 5; s[8][44] = 5;
+            break;
+    }
+
+    return s;
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function renderSprite(sprite, palette, container, pixelSize, showGrid) {
+    const size = sprite.length;
+    container.innerHTML = '';
+    container.style.gridTemplateColumns = `repeat(${size}, ${pixelSize}px)`;
+    container.style.gridTemplateRows = `repeat(${size}, ${pixelSize}px)`;
+    container.classList.toggle('show-grid', showGrid);
+
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const pixel = document.createElement('div');
+            let classes = 'pixel';
+            if (x % 8 === 0) classes += ' grid-major-x';
+            if (y % 8 === 0) classes += ' grid-major-y';
+            pixel.className = classes;
+            pixel.style.width = pixelSize + 'px';
+            pixel.style.height = pixelSize + 'px';
+            const colorIndex = sprite[y][x];
+            const color = palette[colorIndex];
+            pixel.style.backgroundColor = color === 'transparent' ? 'transparent' : color;
+            container.appendChild(pixel);
+        }
+    }
+}
+
+function createSpriteElement(sprite, palette, label, pixelSize, showGrid) {
+    const item = document.createElement('div');
+    item.className = 'tile-item';
+
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'tile-label';
+    labelDiv.textContent = label;
+    item.appendChild(labelDiv);
+
+    const spriteDiv = document.createElement('div');
+    spriteDiv.className = 'sprite';
+    item.appendChild(spriteDiv);
+
+    renderSprite(sprite, palette, spriteDiv, pixelSize, showGrid);
+    return item;
+}
+
+// ============================================================
+// MAIN RENDERING
+// ============================================================
+const groundTypes = ['base', 'textured', 'cracked', 'path_h', 'path_v', 'corner', 'water', 'edge_top'];
+const destructibleTypes = ['crate', 'barrel', 'sandbags', 'brick_wall', 'bush', 'fence'];
+const indestructibleTypes = ['steel_wall', 'concrete_block', 'rock', 'water_obstacle', 'bunker'];
+const debrisTypes = ['debris'];
+
+let currentTheme = 'desert';
+let allAssets = {};
+
+// Pre-generate all assets
+function generateAllAssets() {
+    Object.keys(THEMES).forEach(themeKey => {
+        allAssets[themeKey] = {
+            ground: {},
+            destructible: {},
+            indestructible: {},
+            debris: {}
+        };
+
+        // Use seeded random for consistent results
+        Math.seedrandom && Math.seedrandom(themeKey);
+
+        groundTypes.forEach(type => {
+            allAssets[themeKey].ground[type] = createGroundTile(type, themeKey);
+        });
+        destructibleTypes.forEach(type => {
+            allAssets[themeKey].destructible[type] = createObstacle(type);
+        });
+        indestructibleTypes.forEach(type => {
+            allAssets[themeKey].indestructible[type] = createObstacle(type);
+        });
+        debrisTypes.forEach(type => {
+            allAssets[themeKey].debris[type] = createObstacle(type);
+        });
+    });
+}
+
+function renderThemeTabs() {
+    const tabs = document.getElementById('theme-tabs');
+    tabs.innerHTML = '';
+    Object.keys(THEMES).forEach(themeKey => {
+        const tab = document.createElement('button');
+        tab.className = 'theme-tab' + (themeKey === currentTheme ? ' active' : '');
+        tab.textContent = THEMES[themeKey].name;
+        tab.onclick = () => {
+            currentTheme = themeKey;
+            renderThemeTabs();
+            renderContent();
+        };
+        tabs.appendChild(tab);
+    });
+}
+
+function renderContent() {
+    const content = document.getElementById('content');
+    const pixelSize = parseInt(document.getElementById('pixel-size').value);
+    const showGrid = document.getElementById('show-grid').checked;
+    const theme = THEMES[currentTheme];
+    const assets = allAssets[currentTheme];
+
+    content.innerHTML = '';
+
+    // Ground tiles section
+    const groundSection = document.createElement('div');
+    groundSection.className = 'tile-section';
+    groundSection.innerHTML = '<h3>Ground Tiles (32x32)</h3>';
+    const groundGrid = document.createElement('div');
+    groundGrid.className = 'tile-grid';
+    groundTypes.forEach(type => {
+        groundGrid.appendChild(
+            createSpriteElement(assets.ground[type], theme.ground, type, pixelSize, showGrid)
+        );
+    });
+    groundSection.appendChild(groundGrid);
+    content.appendChild(groundSection);
+
+    // Destructible obstacles section
+    const destSection = document.createElement('div');
+    destSection.className = 'tile-section';
+    destSection.innerHTML = '<h3>Destructible Obstacles (64x64)</h3>';
+    const destGrid = document.createElement('div');
+    destGrid.className = 'tile-grid';
+    destructibleTypes.forEach(type => {
+        destGrid.appendChild(
+            createSpriteElement(assets.destructible[type], theme.obstacle, type, pixelSize, showGrid)
+        );
+    });
+    destSection.appendChild(destGrid);
+    content.appendChild(destSection);
+
+    // Indestructible obstacles section
+    const indestSection = document.createElement('div');
+    indestSection.className = 'tile-section';
+    indestSection.innerHTML = '<h3>Indestructible Obstacles (64x64)</h3>';
+    const indestGrid = document.createElement('div');
+    indestGrid.className = 'tile-grid';
+    indestructibleTypes.forEach(type => {
+        indestGrid.appendChild(
+            createSpriteElement(assets.indestructible[type], theme.obstacle, type, pixelSize, showGrid)
+        );
+    });
+    indestSection.appendChild(indestGrid);
+    content.appendChild(indestSection);
+
+    // Debris section
+    const debrisSection = document.createElement('div');
+    debrisSection.className = 'tile-section';
+    debrisSection.innerHTML = '<h3>Debris (replaces destroyed obstacles)</h3>';
+    const debrisGrid = document.createElement('div');
+    debrisGrid.className = 'tile-grid';
+    debrisTypes.forEach(type => {
+        debrisGrid.appendChild(
+            createSpriteElement(assets.debris[type], theme.obstacle, type, pixelSize, showGrid)
+        );
+    });
+    debrisSection.appendChild(debrisGrid);
+    content.appendChild(debrisSection);
+}
+
+// Event listeners
+document.getElementById('pixel-size').addEventListener('input', (e) => {
+    document.getElementById('size-val').textContent = e.target.value;
+    renderContent();
+});
+
+document.getElementById('show-grid').addEventListener('change', () => {
+    renderContent();
+});
+
+// Export functions
+function exportAllJSON() {
+    const exportDiv = document.getElementById('export-data');
+    exportDiv.style.display = 'block';
+    exportDiv.textContent = JSON.stringify(allAssets, null, 2);
+}
+
+function exportAllC() {
+    const exportDiv = document.getElementById('export-data');
+    exportDiv.style.display = 'block';
+
+    let output = '// Tank Game Map Assets\n';
+    output += '// Ground tiles: 32x32, Obstacles: 64x64\n\n';
+
+    Object.keys(THEMES).forEach(themeKey => {
+        output += `// ========== ${THEMES[themeKey].name.toUpperCase()} THEME ==========\n\n`;
+
+        // Ground tiles
+        groundTypes.forEach(type => {
+            output += `const uint8_t ${themeKey}_ground_${type}[32][32] = {\n`;
+            allAssets[themeKey].ground[type].forEach((row, i) => {
+                output += '    {' + row.join(',') + '}' + (i < 31 ? ',' : '') + '\n';
+            });
+            output += '};\n\n';
+        });
+
+        // Obstacles
+        [...destructibleTypes, ...indestructibleTypes, ...debrisTypes].forEach(type => {
+            const category = destructibleTypes.includes(type) ? 'destructible' :
+                            indestructibleTypes.includes(type) ? 'indestructible' : 'debris';
+            output += `const uint8_t ${themeKey}_${type}[64][64] = {\n`;
+            allAssets[themeKey][category][type].forEach((row, i) => {
+                output += '    {' + row.join(',') + '}' + (i < 63 ? ',' : '') + '\n';
+            });
+            output += '};\n\n';
+        });
+    });
+
+    exportDiv.textContent = output;
+}
+
+// Initialize
+generateAllAssets();
+renderThemeTabs();
+renderContent();
+    </script>
+</body>
+</html>

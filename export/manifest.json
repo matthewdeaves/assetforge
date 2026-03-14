@@ -1,0 +1,299 @@
+{
+  "format": "Tank Game Sprites",
+  "version": "1.0",
+  "palette": [
+    {
+      "index": 0,
+      "hex": "#000000",
+      "name": "transparent",
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    {
+      "index": 1,
+      "hex": "#1a1a1a",
+      "name": "outline",
+      "r": 26,
+      "g": 26,
+      "b": 26
+    },
+    {
+      "index": 2,
+      "hex": "#333333",
+      "name": "dark_gray",
+      "r": 51,
+      "g": 51,
+      "b": 51
+    },
+    {
+      "index": 3,
+      "hex": "#555555",
+      "name": "mid_gray",
+      "r": 85,
+      "g": 85,
+      "b": 85
+    },
+    {
+      "index": 4,
+      "hex": "#777777",
+      "name": "light_gray",
+      "r": 119,
+      "g": 119,
+      "b": 119
+    },
+    {
+      "index": 5,
+      "hex": "#999999",
+      "name": "pale_gray",
+      "r": 153,
+      "g": 153,
+      "b": 153
+    },
+    {
+      "index": 6,
+      "hex": "#cc2222",
+      "name": "red_dark",
+      "r": 204,
+      "g": 34,
+      "b": 34
+    },
+    {
+      "index": 7,
+      "hex": "#ff4444",
+      "name": "red_bright",
+      "r": 255,
+      "g": 68,
+      "b": 68
+    },
+    {
+      "index": 8,
+      "hex": "#22aa22",
+      "name": "green_dark",
+      "r": 34,
+      "g": 170,
+      "b": 34
+    },
+    {
+      "index": 9,
+      "hex": "#44ff44",
+      "name": "green_bright",
+      "r": 68,
+      "g": 255,
+      "b": 68
+    },
+    {
+      "index": 10,
+      "hex": "#2266cc",
+      "name": "blue_dark",
+      "r": 34,
+      "g": 102,
+      "b": 204
+    },
+    {
+      "index": 11,
+      "hex": "#4488ff",
+      "name": "blue_bright",
+      "r": 68,
+      "g": 136,
+      "b": 255
+    },
+    {
+      "index": 12,
+      "hex": "#ccaa22",
+      "name": "yellow_dark",
+      "r": 204,
+      "g": 170,
+      "b": 34
+    },
+    {
+      "index": 13,
+      "hex": "#ffdd44",
+      "name": "yellow_bright",
+      "r": 255,
+      "g": 221,
+      "b": 68
+    },
+    {
+      "index": 14,
+      "hex": "#8B7355",
+      "name": "brown",
+      "r": 139,
+      "g": 115,
+      "b": 85
+    },
+    {
+      "index": 15,
+      "hex": "#ffffff",
+      "name": "white",
+      "r": 255,
+      "g": 255,
+      "b": 255
+    }
+  ],
+  "sprites": {
+    "tanks": [
+      {
+        "name": "tank_red_up",
+        "width": 64,
+        "height": 64,
+        "color": "red",
+        "direction": "up"
+      },
+      {
+        "name": "tank_red_right",
+        "width": 64,
+        "height": 64,
+        "color": "red",
+        "direction": "right"
+      },
+      {
+        "name": "tank_red_down",
+        "width": 64,
+        "height": 64,
+        "color": "red",
+        "direction": "down"
+      },
+      {
+        "name": "tank_red_left",
+        "width": 64,
+        "height": 64,
+        "color": "red",
+        "direction": "left"
+      },
+      {
+        "name": "tank_green_up",
+        "width": 64,
+        "height": 64,
+        "color": "green",
+        "direction": "up"
+      },
+      {
+        "name": "tank_green_right",
+        "width": 64,
+        "height": 64,
+        "color": "green",
+        "direction": "right"
+      },
+      {
+        "name": "tank_green_down",
+        "width": 64,
+        "height": 64,
+        "color": "green",
+        "direction": "down"
+      },
+      {
+        "name": "tank_green_left",
+        "width": 64,
+        "height": 64,
+        "color": "green",
+        "direction": "left"
+      },
+      {
+        "name": "tank_blue_up",
+        "width": 64,
+        "height": 64,
+        "color": "blue",
+        "direction": "up"
+      },
+      {
+        "name": "tank_blue_right",
+        "width": 64,
+        "height": 64,
+        "color": "blue",
+        "direction": "right"
+      },
+      {
+        "name": "tank_blue_down",
+        "width": 64,
+        "height": 64,
+        "color": "blue",
+        "direction": "down"
+      },
+      {
+        "name": "tank_blue_left",
+        "width": 64,
+        "height": 64,
+        "color": "blue",
+        "direction": "left"
+      },
+      {
+        "name": "tank_yellow_up",
+        "width": 64,
+        "height": 64,
+        "color": "yellow",
+        "direction": "up"
+      },
+      {
+        "name": "tank_yellow_right",
+        "width": 64,
+        "height": 64,
+        "color": "yellow",
+        "direction": "right"
+      },
+      {
+        "name": "tank_yellow_down",
+        "width": 64,
+        "height": 64,
+        "color": "yellow",
+        "direction": "down"
+      },
+      {
+        "name": "tank_yellow_left",
+        "width": 64,
+        "height": 64,
+        "color": "yellow",
+        "direction": "left"
+      }
+    ],
+    "tiles": [
+      {
+        "name": "tile_ground",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "name": "tile_road_h",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "name": "tile_road_v",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "name": "tile_water",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "obstacles": [
+      {
+        "name": "obstacle_crate",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "name": "obstacle_barrel",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "name": "obstacle_steel",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "name": "obstacle_rock",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "name": "obstacle_debris",
+        "width": 64,
+        "height": 64
+      }
+    ]
+  }
+}

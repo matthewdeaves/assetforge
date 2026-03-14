@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Sprites - Export for Classic Mac</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            font-family: 'Monaco', 'Consolas', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #fff; margin-bottom: 5px; }
+        h2 { color: #aaa; margin-top: 30px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        h3 { color: #888; }
+        .subtitle { color: #888; margin-bottom: 20px; }
+
+        .info-box {
+            background: #2a2a4a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4488ff;
+        }
+        .info-box h3 { margin-top: 0; color: #4488ff; }
+        .info-box ul { margin: 10px 0; padding-left: 20px; }
+        .info-box code { background: #1a1a2e; padding: 2px 6px; border-radius: 3px; }
+
+        .export-section {
+            background: #2a2a4a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: #4a6a9a;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .btn:hover { background: #5a7aaa; }
+        .btn-primary { background: #2a8a4a; }
+        .btn-primary:hover { background: #3a9a5a; }
+
+        .output {
+            background: #0a0a1a;
+            color: #0f0;
+            padding: 15px;
+            font-size: 11px;
+            max-height: 400px;
+            overflow: auto;
+            white-space: pre;
+            margin-top: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .preview-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .preview-item {
+            text-align: center;
+        }
+        .preview-item canvas {
+            border: 1px solid #444;
+            image-rendering: pixelated;
+        }
+        .preview-item .label {
+            font-size: 10px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .palette-preview {
+            display: flex;
+            gap: 2px;
+            margin: 10px 0;
+        }
+        .palette-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #666;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        th { color: #aaa; }
+
+        #download-links {
+            margin-top: 15px;
+        }
+        #download-links a {
+            color: #4488ff;
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Export Sprites for Classic Mac</h1>
+    <p class="subtitle">Generate files compatible with Mac OS System 6, 7, 8, and 9</p>
+
+    <div class="info-box">
+        <h3>Supported Export Formats</h3>
+        <table>
+            <tr><th>Format</th><th>Use Case</th><th>Tool to Convert</th></tr>
+            <tr><td><code>C Headers (.h)</code></td><td>Embed directly in Retro68/MPW projects</td><td>None needed</td></tr>
+            <tr><td><code>Raw Binary (.bin)</code></td><td>Load at runtime with FSRead</td><td>None needed</td></tr>
+            <tr><td><code>PNG (indexed)</code></td><td>Convert to PICT resources</td><td>GraphicConverter, Retro68</td></tr>
+            <tr><td><code>Rez Source (.r)</code></td><td>Compile to resource fork</td><td>Rez (MPW/Retro68)</td></tr>
+        </table>
+        <p><strong>Recommended workflow:</strong> Export C headers for sprites embedded in code, or PNG + Rez for resource-based loading.</p>
+    </div>
+
+    <h2>Color Palette (8-bit indexed)</h2>
+    <div class="export-section">
+        <p>All sprites use a 16-color palette (fits in 4-bit mode, compatible with 8-bit):</p>
+        <div id="palette-display"></div>
+        <button class="btn" onclick="exportPalette()">Export Palette</button>
+        <div class="output" id="palette-output"></div>
+    </div>
+
+    <h2>Tank Sprites (64x64)</h2>
+    <div class="export-section">
+        <p>4 colors (Red, Green, Blue, Yellow) x 4 directions (Up, Right, Down, Left) = 16 sprites</p>
+        <div class="preview-grid" id="tank-preview"></div>
+        <button class="btn btn-primary" onclick="exportTanksC()">Export C Headers</button>
+        <button class="btn" onclick="exportTanksRez()">Export Rez Source</button>
+        <button class="btn" onclick="exportTanksBinary()">Export Raw Binary</button>
+        <button class="btn" onclick="downloadTankPNGs()">Download PNGs</button>
+        <div class="output" id="tank-output"></div>
+        <div id="tank-downloads"></div>
+    </div>
+
+    <h2>Map Tiles (32x32)</h2>
+    <div class="export-section">
+        <p>Ground tiles for each theme</p>
+        <div class="preview-grid" id="tile-preview"></div>
+        <button class="btn btn-primary" onclick="exportTilesC()">Export C Headers</button>
+        <button class="btn" onclick="exportTilesRez()">Export Rez Source</button>
+        <div class="output" id="tile-output"></div>
+    </div>
+
+    <h2>Obstacles (64x64)</h2>
+    <div class="export-section">
+        <p>Destructible and indestructible obstacles</p>
+        <div class="preview-grid" id="obstacle-preview"></div>
+        <button class="btn btn-primary" onclick="exportObstaclesC()">Export C Headers</button>
+        <button class="btn" onclick="exportObstaclesRez()">Export Rez Source</button>
+        <div class="output" id="obstacle-output"></div>
+    </div>
+
+    <h2>Complete Export Package</h2>
+    <div class="export-section">
+        <p>Download everything needed for your Classic Mac project:</p>
+        <button class="btn btn-primary" onclick="exportAll()">Generate Complete Package</button>
+        <div class="output" id="all-output"></div>
+    </div>
+
+    <script>
+// ============================================================
+// MASTER PALETTE - 16 colors for all sprites
+// Classic Mac compatible (works in 4-bit and 8-bit modes)
+// ============================================================
+const MASTER_PALETTE = [
+    { index: 0,  hex: '#000000', name: 'transparent/black', r: 0, g: 0, b: 0 },
+    { index: 1,  hex: '#1a1a1a', name: 'dark_gray_1', r: 26, g: 26, b: 26 },
+    { index: 2,  hex: '#333333', name: 'dark_gray_2', r: 51, g: 51, b: 51 },
+    { index: 3,  hex: '#555555', name: 'mid_gray', r: 85, g: 85, b: 85 },
+    { index: 4,  hex: '#777777', name: 'light_gray_1', r: 119, g: 119, b: 119 },
+    { index: 5,  hex: '#999999', name: 'light_gray_2', r: 153, g: 153, b: 153 },
+    { index: 6,  hex: '#cc2222', name: 'red_dark', r: 204, g: 34, b: 34 },
+    { index: 7,  hex: '#ff4444', name: 'red_bright', r: 255, g: 68, b: 68 },
+    { index: 8,  hex: '#22aa22', name: 'green_dark', r: 34, g: 170, b: 34 },
+    { index: 9,  hex: '#44ff44', name: 'green_bright', r: 68, g: 255, b: 68 },
+    { index: 10, hex: '#2266cc', name: 'blue_dark', r: 34, g: 102, b: 204 },
+    { index: 11, hex: '#4488ff', name: 'blue_bright', r: 68, g: 136, b: 255 },
+    { index: 12, hex: '#ccaa22', name: 'yellow_dark', r: 204, g: 170, b: 34 },
+    { index: 13, hex: '#ffdd44', name: 'yellow_bright', r: 255, g: 221, b: 68 },
+    { index: 14, hex: '#8B7355', name: 'brown', r: 139, g: 115, b: 85 },
+    { index: 15, hex: '#ffffff', name: 'white', r: 255, g: 255, b: 255 },
+];
+
+// Tank color mappings (palette indices for each tank color)
+const TANK_COLORS = {
+    red:    { outline: 1, dark: 6, mid: 6, bright: 7, highlight: 7, metal: 3, track: 2 },
+    green:  { outline: 1, dark: 8, mid: 8, bright: 9, highlight: 9, metal: 3, track: 2 },
+    blue:   { outline: 1, dark: 10, mid: 10, bright: 11, highlight: 11, metal: 3, track: 2 },
+    yellow: { outline: 1, dark: 12, mid: 12, bright: 13, highlight: 13, metal: 3, track: 2 },
+};
+
+// ============================================================
+// SPRITE GENERATORS (same as before, but output palette indices)
+// ============================================================
+function createTankSprite(colorScheme) {
+    const c = colorScheme;
+    const s = new Array(64).fill(null).map(() => new Array(64).fill(0));
+    const rect = (x, y, w, h, col) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 64 && x+dx >= 0 && x+dx < 64) s[y+dy][x+dx] = col;
+            }
+        }
+    };
+
+    // Tracks
+    rect(2, 8, 18, 54, c.outline); rect(3, 9, 16, 52, c.track); rect(4, 10, 14, 50, c.track);
+    for (let i = 0; i < 12; i++) rect(3, 12 + i*4, 16, 2, c.outline);
+    rect(6, 12, 10, 46, c.metal); rect(8, 14, 6, 42, 4);
+
+    rect(44, 8, 18, 54, c.outline); rect(45, 9, 16, 52, c.track); rect(46, 10, 14, 50, c.track);
+    for (let i = 0; i < 12; i++) rect(45, 12 + i*4, 16, 2, c.outline);
+    rect(48, 12, 10, 46, c.metal); rect(50, 14, 6, 42, 4);
+
+    // Body
+    rect(16, 10, 32, 50, c.outline); rect(17, 11, 30, 48, c.dark); rect(18, 12, 28, 46, c.mid);
+    rect(20, 14, 24, 42, c.bright); rect(22, 16, 20, 16, c.highlight);
+
+    // Turret
+    rect(18, 22, 28, 28, c.dark); rect(20, 24, 24, 24, c.mid); rect(22, 26, 20, 20, c.bright);
+    rect(24, 28, 16, 12, c.highlight); rect(26, 30, 12, 6, c.highlight);
+
+    // Gun barrel
+    rect(26, 1, 12, 28, c.outline); rect(27, 2, 10, 26, c.metal); rect(28, 3, 8, 24, 4);
+    rect(29, 4, 6, 22, 5); rect(30, 5, 4, 20, 5);
+    rect(24, 1, 16, 6, c.outline); rect(25, 2, 14, 4, c.metal); rect(26, 3, 12, 2, 5);
+
+    // Details
+    rect(22, 56, 6, 6, c.metal); rect(23, 57, 4, 4, c.track);
+    rect(36, 56, 6, 6, c.metal); rect(37, 57, 4, 4, c.track);
+    rect(29, 32, 6, 6, c.metal); rect(30, 33, 4, 4, 5);
+
+    return s;
+}
+
+function rotateSprite90(sprite) {
+    const size = sprite.length;
+    const rotated = new Array(size).fill(null).map(() => new Array(size).fill(0));
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            rotated[x][size - 1 - y] = sprite[y][x];
+        }
+    }
+    return rotated;
+}
+
+function createGroundTile(type) {
+    const s = new Array(32).fill(null).map(() => new Array(32).fill(0));
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 32 && x+dx >= 0 && x+dx < 32) s[y+dy][x+dx] = c;
+            }
+        }
+    };
+
+    if (type === 'ground') {
+        rect(0, 0, 32, 32, 14); // Brown base
+        for (let i = 0; i < 20; i++) {
+            const x = Math.floor(Math.random() * 30);
+            const y = Math.floor(Math.random() * 30);
+            s[y][x] = Math.random() > 0.5 ? 3 : 2;
+        }
+    } else if (type === 'road_h') {
+        rect(0, 0, 32, 32, 14);
+        rect(0, 10, 32, 12, 2);
+        rect(0, 11, 32, 10, 3);
+        for (let x = 2; x < 32; x += 8) rect(x, 15, 4, 2, 5);
+    } else if (type === 'road_v') {
+        rect(0, 0, 32, 32, 14);
+        rect(10, 0, 12, 32, 2);
+        rect(11, 0, 10, 32, 3);
+        for (let y = 2; y < 32; y += 8) rect(15, y, 2, 4, 5);
+    } else if (type === 'water') {
+        rect(0, 0, 32, 32, 10);
+        for (let y = 0; y < 32; y += 4) {
+            for (let x = 0; x < 32; x++) {
+                if (Math.sin((x + y) * 0.4) > 0.3) s[y][x] = 11;
+            }
+        }
+    }
+    return s;
+}
+
+function createObstacle(type) {
+    const s = new Array(64).fill(null).map(() => new Array(64).fill(0));
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 64 && x+dx >= 0 && x+dx < 64) s[y+dy][x+dx] = c;
+            }
+        }
+    };
+    const circle = (cx, cy, r, c) => {
+        for (let y = -r; y <= r; y++) {
+            for (let x = -r; x <= r; x++) {
+                if (x*x + y*y <= r*r) {
+                    const px = cx + x, py = cy + y;
+                    if (px >= 0 && px < 64 && py >= 0 && py < 64) s[py][px] = c;
+                }
+            }
+        }
+    };
+
+    if (type === 'crate') {
+        rect(6, 6, 52, 52, 1); rect(7, 7, 50, 50, 14); rect(8, 8, 48, 48, 14);
+        rect(8, 18, 48, 3, 2); rect(8, 31, 48, 3, 2); rect(8, 44, 48, 3, 2);
+        rect(8, 8, 8, 8, 3); rect(48, 8, 8, 8, 3); rect(8, 48, 8, 8, 3); rect(48, 48, 8, 8, 3);
+    } else if (type === 'barrel') {
+        circle(32, 32, 26, 1); circle(32, 32, 24, 6); circle(32, 32, 22, 7);
+        circle(32, 32, 10, 3); circle(32, 32, 8, 4);
+        rect(28, 14, 8, 4, 6); rect(28, 46, 8, 4, 6);
+    } else if (type === 'steel') {
+        rect(4, 4, 56, 56, 1); rect(5, 5, 54, 54, 2); rect(6, 6, 52, 52, 3); rect(8, 8, 48, 48, 4);
+        rect(12, 12, 18, 18, 5); rect(34, 12, 18, 18, 5);
+        rect(12, 34, 18, 18, 5); rect(34, 34, 18, 18, 5);
+    } else if (type === 'rock') {
+        circle(32, 32, 26, 1); circle(32, 32, 24, 2); circle(32, 32, 20, 3);
+        circle(32, 32, 14, 4); circle(26, 26, 6, 5);
+    } else if (type === 'debris') {
+        rect(10, 40, 16, 12, 1); rect(11, 41, 14, 10, 3);
+        rect(38, 44, 14, 12, 1); rect(39, 45, 12, 10, 4);
+        rect(24, 20, 10, 10, 1); rect(25, 21, 8, 8, 3);
+    }
+    return s;
+}
+
+// ============================================================
+// GENERATE ALL SPRITES
+// ============================================================
+const allTanks = {};
+const allTiles = {};
+const allObstacles = {};
+
+function generateAll() {
+    // Tanks
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        const base = createTankSprite(TANK_COLORS[color]);
+        allTanks[color] = {
+            up: base,
+            right: rotateSprite90(base),
+            down: rotateSprite90(rotateSprite90(base)),
+            left: rotateSprite90(rotateSprite90(rotateSprite90(base)))
+        };
+    });
+
+    // Tiles
+    ['ground', 'road_h', 'road_v', 'water'].forEach(type => {
+        allTiles[type] = createGroundTile(type);
+    });
+
+    // Obstacles
+    ['crate', 'barrel', 'steel', 'rock', 'debris'].forEach(type => {
+        allObstacles[type] = createObstacle(type);
+    });
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function renderToCanvas(sprite, scale = 2) {
+    const size = sprite.length;
+    const canvas = document.createElement('canvas');
+    canvas.width = size * scale;
+    canvas.height = size * scale;
+    const ctx = canvas.getContext('2d');
+
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const colorIndex = sprite[y][x];
+            const color = MASTER_PALETTE[colorIndex];
+            if (colorIndex > 0) {
+                ctx.fillStyle = color.hex;
+                ctx.fillRect(x * scale, y * scale, scale, scale);
+            }
+        }
+    }
+    return canvas;
+}
+
+function renderPreviews() {
+    // Palette
+    const palDiv = document.getElementById('palette-display');
+    palDiv.innerHTML = '<div class="palette-preview"></div>';
+    const palRow = palDiv.querySelector('.palette-preview');
+    MASTER_PALETTE.forEach((c, i) => {
+        const swatch = document.createElement('div');
+        swatch.className = 'palette-color';
+        swatch.style.backgroundColor = c.hex;
+        swatch.title = `${i}: ${c.name}`;
+        palRow.appendChild(swatch);
+    });
+
+    // Tanks
+    const tankDiv = document.getElementById('tank-preview');
+    tankDiv.innerHTML = '';
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        ['up', 'right', 'down', 'left'].forEach(dir => {
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+            item.appendChild(renderToCanvas(allTanks[color][dir], 1));
+            item.innerHTML += `<div class="label">${color}_${dir}</div>`;
+            tankDiv.appendChild(item);
+        });
+    });
+
+    // Tiles
+    const tileDiv = document.getElementById('tile-preview');
+    tileDiv.innerHTML = '';
+    Object.entries(allTiles).forEach(([name, sprite]) => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        item.appendChild(renderToCanvas(sprite, 2));
+        item.innerHTML += `<div class="label">${name}</div>`;
+        tileDiv.appendChild(item);
+    });
+
+    // Obstacles
+    const obsDiv = document.getElementById('obstacle-preview');
+    obsDiv.innerHTML = '';
+    Object.entries(allObstacles).forEach(([name, sprite]) => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        item.appendChild(renderToCanvas(sprite, 1));
+        item.innerHTML += `<div class="label">${name}</div>`;
+        obsDiv.appendChild(item);
+    });
+}
+
+// ============================================================
+// EXPORT FUNCTIONS
+// ============================================================
+function exportPalette() {
+    let output = '/* Tank Game - Master Palette (16 colors) */\n';
+    output += '/* Compatible with 4-bit and 8-bit indexed color modes */\n\n';
+
+    // C format
+    output += '/* C Format - RGB values (0-255) */\n';
+    output += 'typedef struct { unsigned char r, g, b; } RGBColor8;\n\n';
+    output += 'const RGBColor8 gPalette[16] = {\n';
+    MASTER_PALETTE.forEach((c, i) => {
+        output += `    { ${c.r.toString().padStart(3)}, ${c.g.toString().padStart(3)}, ${c.b.toString().padStart(3)} }, /* ${i}: ${c.name} */\n`;
+    });
+    output += '};\n\n';
+
+    // Mac ColorSpec format (for palette resources)
+    output += '/* Mac ColorSpec format (16-bit RGB values) */\n';
+    output += 'const ColorSpec gColorTable[16] = {\n';
+    MASTER_PALETTE.forEach((c, i) => {
+        const r16 = c.r * 257;
+        const g16 = c.g * 257;
+        const b16 = c.b * 257;
+        output += `    { ${i}, { 0x${r16.toString(16).padStart(4,'0')}, 0x${g16.toString(16).padStart(4,'0')}, 0x${b16.toString(16).padStart(4,'0')} } },\n`;
+    });
+    output += '};\n';
+
+    const el = document.getElementById('palette-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function spriteToC(name, sprite) {
+    const size = sprite.length;
+    let out = `/* ${name} - ${size}x${size} pixels, 4-bit indexed */\n`;
+    out += `const unsigned char ${name}[${size}][${size}] = {\n`;
+    sprite.forEach((row, y) => {
+        out += '    { ' + row.map(v => v.toString().padStart(2)).join(',') + ' }';
+        out += (y < size - 1) ? ',\n' : '\n';
+    });
+    out += '};\n\n';
+    return out;
+}
+
+function spriteToPackedC(name, sprite) {
+    // Pack two 4-bit pixels per byte for efficiency
+    const size = sprite.length;
+    let out = `/* ${name} - ${size}x${size} pixels, packed 4-bit (2 pixels/byte) */\n`;
+    out += `const unsigned char ${name}_packed[${size}][${size/2}] = {\n`;
+    sprite.forEach((row, y) => {
+        const packed = [];
+        for (let x = 0; x < size; x += 2) {
+            const byte = ((row[x] & 0x0F) << 4) | (row[x+1] & 0x0F);
+            packed.push('0x' + byte.toString(16).padStart(2, '0'));
+        }
+        out += '    { ' + packed.join(', ') + ' }';
+        out += (y < size - 1) ? ',\n' : '\n';
+    });
+    out += '};\n\n';
+    return out;
+}
+
+function exportTanksC() {
+    let output = '/*\n * Tank Sprites for Classic Mac\n';
+    output += ' * Generated by Tank Sprite Editor\n';
+    output += ' * 64x64 pixels, 4-bit indexed color\n */\n\n';
+    output += '#ifndef TANK_SPRITES_H\n#define TANK_SPRITES_H\n\n';
+
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        ['up', 'right', 'down', 'left'].forEach(dir => {
+            output += spriteToC(`tank_${color}_${dir}`, allTanks[color][dir]);
+        });
+    });
+
+    output += '#endif /* TANK_SPRITES_H */\n';
+
+    const el = document.getElementById('tank-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function exportTanksRez() {
+    let output = '/*\n * Tank Sprites - Rez Source\n';
+    output += ' * Compile with: Rez -o TankSprites.rsrc TankSprites.r\n */\n\n';
+    output += '#include "Types.r"\n\n';
+
+    let resID = 128;
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        ['up', 'right', 'down', 'left'].forEach(dir => {
+            const sprite = allTanks[color][dir];
+            output += `/* Tank ${color} ${dir} - Resource ID ${resID} */\n`;
+            output += `data 'SPRT' (${resID}, "tank_${color}_${dir}") {\n`;
+
+            // Header: width, height
+            output += '    $"0040 0040"  /* 64x64 */\n';
+
+            // Pixel data (packed)
+            for (let y = 0; y < 64; y++) {
+                let line = '    $"';
+                for (let x = 0; x < 64; x += 2) {
+                    const byte = ((sprite[y][x] & 0x0F) << 4) | (sprite[y][x+1] & 0x0F);
+                    line += byte.toString(16).padStart(2, '0').toUpperCase();
+                }
+                line += '"';
+                if (y < 63) line += '\n';
+                output += line;
+            }
+            output += '\n};\n\n';
+            resID++;
+        });
+    });
+
+    const el = document.getElementById('tank-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function exportTanksBinary() {
+    let output = 'Binary format specification:\n\n';
+    output += 'File: tanks.bin\n';
+    output += 'Header (4 bytes):\n';
+    output += '  - Bytes 0-1: Magic "TK"\n';
+    output += '  - Byte 2: Sprite count (16)\n';
+    output += '  - Byte 3: Bits per pixel (4)\n\n';
+    output += 'Per sprite (2052 bytes each):\n';
+    output += '  - Bytes 0-1: Width (64)\n';
+    output += '  - Bytes 2-3: Height (64)\n';
+    output += '  - Bytes 4-2051: Pixel data (64*64/2 = 2048 bytes, packed 4-bit)\n\n';
+    output += 'Sprite order:\n';
+    let idx = 0;
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        ['up', 'right', 'down', 'left'].forEach(dir => {
+            output += `  ${idx}: tank_${color}_${dir}\n`;
+            idx++;
+        });
+    });
+
+    const el = document.getElementById('tank-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function downloadTankPNGs() {
+    const downloads = document.getElementById('tank-downloads');
+    downloads.innerHTML = '<p>Right-click to save:</p>';
+
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        ['up', 'right', 'down', 'left'].forEach(dir => {
+            const canvas = renderToCanvas(allTanks[color][dir], 1);
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = `tank_${color}_${dir}.png`;
+            link.textContent = `tank_${color}_${dir}.png`;
+            link.style.marginRight = '10px';
+            downloads.appendChild(link);
+        });
+        downloads.appendChild(document.createElement('br'));
+    });
+}
+
+function exportTilesC() {
+    let output = '/*\n * Ground Tiles for Classic Mac\n';
+    output += ' * 32x32 pixels, 4-bit indexed color\n */\n\n';
+    output += '#ifndef TILES_H\n#define TILES_H\n\n';
+
+    Object.entries(allTiles).forEach(([name, sprite]) => {
+        output += spriteToC(`tile_${name}`, sprite);
+    });
+
+    output += '#endif /* TILES_H */\n';
+
+    const el = document.getElementById('tile-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function exportTilesRez() {
+    let output = '/* Ground Tiles - Rez Source */\n\n';
+    let resID = 200;
+
+    Object.entries(allTiles).forEach(([name, sprite]) => {
+        output += `data 'TILE' (${resID}, "tile_${name}") {\n`;
+        output += '    $"0020 0020"  /* 32x32 */\n';
+        for (let y = 0; y < 32; y++) {
+            let line = '    $"';
+            for (let x = 0; x < 32; x += 2) {
+                const byte = ((sprite[y][x] & 0x0F) << 4) | (sprite[y][x+1] & 0x0F);
+                line += byte.toString(16).padStart(2, '0').toUpperCase();
+            }
+            line += '"' + (y < 31 ? '\n' : '');
+            output += line;
+        }
+        output += '\n};\n\n';
+        resID++;
+    });
+
+    const el = document.getElementById('tile-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function exportObstaclesC() {
+    let output = '/*\n * Obstacle Sprites for Classic Mac\n';
+    output += ' * 64x64 pixels, 4-bit indexed color\n */\n\n';
+    output += '#ifndef OBSTACLES_H\n#define OBSTACLES_H\n\n';
+
+    Object.entries(allObstacles).forEach(([name, sprite]) => {
+        output += spriteToC(`obstacle_${name}`, sprite);
+    });
+
+    output += '#endif /* OBSTACLES_H */\n';
+
+    const el = document.getElementById('obstacle-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function exportObstaclesRez() {
+    let output = '/* Obstacle Sprites - Rez Source */\n\n';
+    let resID = 300;
+
+    Object.entries(allObstacles).forEach(([name, sprite]) => {
+        output += `data 'OBST' (${resID}, "obstacle_${name}") {\n`;
+        output += '    $"0040 0040"  /* 64x64 */\n';
+        for (let y = 0; y < 64; y++) {
+            let line = '    $"';
+            for (let x = 0; x < 64; x += 2) {
+                const byte = ((sprite[y][x] & 0x0F) << 4) | (sprite[y][x+1] & 0x0F);
+                line += byte.toString(16).padStart(2, '0').toUpperCase();
+            }
+            line += '"' + (y < 63 ? '\n' : '');
+            output += line;
+        }
+        output += '\n};\n\n';
+        resID++;
+    });
+
+    const el = document.getElementById('obstacle-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+function exportAll() {
+    let output = '/*\n';
+    output += ' * =========================================\n';
+    output += ' * TANK GAME - COMPLETE SPRITE PACKAGE\n';
+    output += ' * For Mac OS System 6, 7, 8, 9\n';
+    output += ' * =========================================\n';
+    output += ' *\n';
+    output += ' * Files to create:\n';
+    output += ' *   1. sprites.h    - All sprite data as C arrays\n';
+    output += ' *   2. palette.h    - Color palette definitions\n';
+    output += ' *   3. sprites.r    - Rez source for resource fork\n';
+    output += ' *   4. *.png        - PNG files for GraphicConverter\n';
+    output += ' *\n';
+    output += ' * Build with Retro68 or MPW:\n';
+    output += ' *   Rez sprites.r -o game.rsrc\n';
+    output += ' *\n';
+    output += ' * Or include sprites.h directly in your C code.\n';
+    output += ' */\n\n';
+
+    output += '/* ====== PALETTE ====== */\n\n';
+    output += 'const unsigned char palette_rgb[16][3] = {\n';
+    MASTER_PALETTE.forEach((c, i) => {
+        output += `    { ${c.r.toString().padStart(3)}, ${c.g.toString().padStart(3)}, ${c.b.toString().padStart(3)} }, /* ${i}: ${c.name} */\n`;
+    });
+    output += '};\n\n';
+
+    output += '/* ====== TANK SPRITES (64x64) ====== */\n\n';
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        ['up', 'right', 'down', 'left'].forEach(dir => {
+            output += spriteToPackedC(`tank_${color}_${dir}`, allTanks[color][dir]);
+        });
+    });
+
+    output += '/* ====== GROUND TILES (32x32) ====== */\n\n';
+    Object.entries(allTiles).forEach(([name, sprite]) => {
+        output += spriteToPackedC(`tile_${name}`, sprite);
+    });
+
+    output += '/* ====== OBSTACLES (64x64) ====== */\n\n';
+    Object.entries(allObstacles).forEach(([name, sprite]) => {
+        output += spriteToPackedC(`obstacle_${name}`, sprite);
+    });
+
+    output += '\n/* End of sprite data */\n';
+
+    const el = document.getElementById('all-output');
+    el.style.display = 'block';
+    el.textContent = output;
+}
+
+// Initialize
+generateAll();
+renderPreviews();
+    </script>
+</body>
+</html>

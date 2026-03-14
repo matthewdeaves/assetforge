@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Game - Complete Asset Preview</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            font-family: 'Monaco', 'Consolas', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #fff; margin-bottom: 5px; }
+        h2 { color: #aaa; margin: 30px 0 15px 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        h3 { color: #777; margin: 20px 0 10px 0; font-size: 14px; }
+        .subtitle { color: #888; margin-bottom: 20px; }
+
+        .controls {
+            background: #2a2a4a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls label { color: #aaa; cursor: pointer; }
+        .controls select, .controls input[type="range"] {
+            background: #1a1a2e;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .map-preview-container {
+            background: #2a2a4a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .map-preview {
+            display: grid;
+            gap: 0;
+            border: 3px solid #444;
+            width: fit-content;
+        }
+
+        .map-cell {
+            position: relative;
+        }
+        .map-cell canvas {
+            display: block;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #666;
+        }
+
+        .asset-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .asset-item {
+            text-align: center;
+        }
+        .asset-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .asset-canvas {
+            border: 1px solid #444;
+        }
+
+        .section {
+            background: #2a2a4a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tank-row {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .tank-group {
+            text-align: center;
+        }
+        .tank-group h4 {
+            margin: 0 0 10px 0;
+            font-size: 12px;
+        }
+        .tank-group h4.red { color: #ff4444; }
+        .tank-group h4.green { color: #44ff44; }
+        .tank-group h4.blue { color: #4488ff; }
+        .tank-group h4.yellow { color: #ffdd44; }
+        .tank-directions {
+            display: flex;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tank Game - Complete Assets</h1>
+    <p class="subtitle">Preview all game assets with sample map</p>
+
+    <div class="controls">
+        <label>Theme:
+            <select id="theme-select">
+                <option value="desert">Desert</option>
+                <option value="grass">Grassland</option>
+                <option value="snow">Arctic</option>
+                <option value="urban">Urban</option>
+                <option value="swamp">Swamp</option>
+            </select>
+        </label>
+        <label>Scale: <span id="scale-val">4</span>px
+            <input type="range" id="scale" min="2" max="6" value="4">
+        </label>
+    </div>
+
+    <h2>Sample Map Preview</h2>
+    <div class="map-preview-container">
+        <div class="map-preview" id="map-preview"></div>
+        <div class="legend" id="legend"></div>
+    </div>
+
+    <h2>Tank Sprites (64x64)</h2>
+    <div class="section">
+        <div class="tank-row" id="tanks"></div>
+    </div>
+
+    <h2>Ground Tiles (32x32)</h2>
+    <div class="section">
+        <div class="asset-grid" id="ground-tiles"></div>
+    </div>
+
+    <h2>Destructible Obstacles (64x64)</h2>
+    <div class="section">
+        <div class="asset-grid" id="destructible"></div>
+    </div>
+
+    <h2>Indestructible Obstacles (64x64)</h2>
+    <div class="section">
+        <div class="asset-grid" id="indestructible"></div>
+    </div>
+
+    <script>
+// ============================================================
+// PALETTES
+// ============================================================
+const TANK_PALETTES = {
+    red: ['transparent','#1a0000','#4a1111','#881111','#cc2222','#ff4444','#ff8888','#333333','#555555','#777777','#999999','#222222','#444444','#111111'],
+    green: ['transparent','#001a00','#114a11','#118811','#22cc22','#44ff44','#88ff88','#333333','#555555','#777777','#999999','#222222','#444444','#111111'],
+    blue: ['transparent','#000022','#112255','#224488','#3366cc','#4488ff','#88bbff','#333333','#555555','#777777','#999999','#222222','#444444','#111111'],
+    yellow: ['transparent','#1a1500','#4a4011','#887711','#ccaa22','#ffdd44','#ffee88','#333333','#555555','#777777','#999999','#222222','#444444','#111111']
+};
+
+const THEMES = {
+    desert: {
+        ground: ['transparent','#8B7355','#A08060','#C4A574','#D4B896','#685840','#E8D4B8'],
+        obstacle: ['transparent','#2a1a0a','#4a3520','#6a5030','#8a7040','#aa9050','#c4a060','#333333','#555555','#777777','#999999','#881111','#cc2222','#111111']
+    },
+    grass: {
+        ground: ['transparent','#2d4a1c','#3d6a2c','#4d8a3c','#6aaa4c','#1d3a0c','#8aca6c'],
+        obstacle: ['transparent','#1a2a0a','#2a4015','#3a5520','#4a7030','#5a8540','#7aaa50','#4a3520','#6a5030','#8a7040','#aa9050','#666666','#888888','#111111']
+    },
+    snow: {
+        ground: ['transparent','#a0b0c0','#c0d0e0','#d8e8f0','#f0f8ff','#8090a0','#ffffff'],
+        obstacle: ['transparent','#405060','#607080','#8090a0','#a0b0c0','#c0d0e0','#e0f0ff','#333344','#555566','#777788','#9999aa','#2244aa','#4488ff','#111122']
+    },
+    urban: {
+        ground: ['transparent','#3a3a3a','#4a4a4a','#5a5a5a','#6a6a6a','#2a2a2a','#7a7a7a'],
+        obstacle: ['transparent','#1a1a1a','#2a2a2a','#3a3a3a','#4a4a4a','#5a5a5a','#7a7a7a','#884422','#aa6633','#cc8844','#ddaa66','#ffcc00','#ffee44','#000000']
+    },
+    swamp: {
+        ground: ['transparent','#2a3020','#3a4530','#4a5540','#5a6550','#1a2010','#6a7560'],
+        obstacle: ['transparent','#1a2010','#2a3520','#3a4530','#4a5a40','#5a7050','#7a9060','#3a2a1a','#5a4a3a','#7a6a5a','#9a8a7a','#225522','#44aa44','#0a100a']
+    }
+};
+
+// ============================================================
+// SPRITE DATA GENERATORS
+// ============================================================
+function createTankSprite() {
+    const s = new Array(64).fill(null).map(() => new Array(64).fill(0));
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 64 && x+dx >= 0 && x+dx < 64) s[y+dy][x+dx] = c;
+            }
+        }
+    };
+
+    // Left track
+    rect(2, 8, 18, 54, 13); rect(3, 9, 16, 52, 11); rect(4, 10, 14, 50, 12);
+    for (let i = 0; i < 12; i++) rect(3, 12 + i*4, 16, 2, 11);
+    rect(6, 12, 10, 46, 7); rect(8, 14, 6, 42, 8);
+
+    // Right track
+    rect(44, 8, 18, 54, 13); rect(45, 9, 16, 52, 11); rect(46, 10, 14, 50, 12);
+    for (let i = 0; i < 12; i++) rect(45, 12 + i*4, 16, 2, 11);
+    rect(48, 12, 10, 46, 7); rect(50, 14, 6, 42, 8);
+
+    // Body
+    rect(16, 10, 32, 50, 13); rect(17, 11, 30, 48, 2); rect(18, 12, 28, 46, 3);
+    rect(20, 14, 24, 42, 4); rect(22, 16, 20, 16, 5);
+
+    // Turret
+    rect(18, 22, 28, 28, 2); rect(20, 24, 24, 24, 3); rect(22, 26, 20, 20, 4);
+    rect(24, 28, 16, 12, 5); rect(26, 30, 12, 6, 6);
+
+    // Gun
+    rect(26, 1, 12, 28, 13); rect(27, 2, 10, 26, 7); rect(28, 3, 8, 24, 8);
+    rect(29, 4, 6, 22, 9); rect(30, 5, 4, 20, 10);
+    rect(24, 1, 16, 6, 13); rect(25, 2, 14, 4, 7); rect(26, 3, 12, 2, 9);
+
+    // Details
+    const rivet = (x, y) => { s[y][x] = 8; s[y][x+1] = 9; s[y+1][x] = 7; s[y+1][x+1] = 8; };
+    rivet(19, 13); rivet(42, 13); rivet(19, 54); rivet(42, 54);
+    rect(22, 56, 6, 6, 7); rect(23, 57, 4, 4, 11);
+    rect(36, 56, 6, 6, 7); rect(37, 57, 4, 4, 11);
+    rect(29, 32, 6, 6, 7); rect(30, 33, 4, 4, 9);
+
+    return s;
+}
+
+function rotateSprite90(sprite) {
+    const size = sprite.length;
+    const rotated = new Array(size).fill(null).map(() => new Array(size).fill(0));
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            rotated[x][size - 1 - y] = sprite[y][x];
+        }
+    }
+    return rotated;
+}
+
+function createGroundTile(type) {
+    const s = new Array(32).fill(null).map(() => new Array(32).fill(0));
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 32 && x+dx >= 0 && x+dx < 32) s[y+dy][x+dx] = c;
+            }
+        }
+    };
+
+    if (type === 'base') {
+        rect(0, 0, 32, 32, 2);
+        for (let i = 0; i < 20; i++) {
+            s[Math.floor(Math.random()*30)][Math.floor(Math.random()*30)] = Math.random() > 0.5 ? 3 : 1;
+        }
+    } else if (type === 'textured') {
+        rect(0, 0, 32, 32, 2);
+        for (let y = 0; y < 32; y++) {
+            for (let x = 0; x < 32; x++) {
+                const n = Math.random();
+                if (n > 0.85) s[y][x] = 4;
+                else if (n > 0.7) s[y][x] = 3;
+                else if (n < 0.15) s[y][x] = 1;
+            }
+        }
+    } else if (type === 'path_h') {
+        rect(0, 0, 32, 32, 2);
+        rect(0, 10, 32, 12, 1);
+        rect(0, 11, 32, 10, 5);
+        for (let x = 2; x < 32; x += 8) rect(x, 15, 4, 2, 4);
+    } else if (type === 'path_v') {
+        rect(0, 0, 32, 32, 2);
+        rect(10, 0, 12, 32, 1);
+        rect(11, 0, 10, 32, 5);
+        for (let y = 2; y < 32; y += 8) rect(15, y, 2, 4, 4);
+    }
+    return s;
+}
+
+function createObstacle(type) {
+    const s = new Array(64).fill(null).map(() => new Array(64).fill(0));
+    const rect = (x, y, w, h, c) => {
+        for (let dy = 0; dy < h; dy++) {
+            for (let dx = 0; dx < w; dx++) {
+                if (y+dy >= 0 && y+dy < 64 && x+dx >= 0 && x+dx < 64) s[y+dy][x+dx] = c;
+            }
+        }
+    };
+    const circle = (cx, cy, r, c) => {
+        for (let y = -r; y <= r; y++) {
+            for (let x = -r; x <= r; x++) {
+                if (x*x + y*y <= r*r) {
+                    const px = cx + x, py = cy + y;
+                    if (px >= 0 && px < 64 && py >= 0 && py < 64) s[py][px] = c;
+                }
+            }
+        }
+    };
+    const ellipse = (cx, cy, rx, ry, c) => {
+        for (let y = -ry; y <= ry; y++) {
+            for (let x = -rx; x <= rx; x++) {
+                if ((x*x)/(rx*rx) + (y*y)/(ry*ry) <= 1) {
+                    const px = cx + x, py = cy + y;
+                    if (px >= 0 && px < 64 && py >= 0 && py < 64) s[py][px] = c;
+                }
+            }
+        }
+    };
+
+    if (type === 'crate') {
+        // Top-down wooden crate
+        rect(6, 6, 52, 52, 13); rect(7, 7, 50, 50, 2); rect(8, 8, 48, 48, 3); rect(10, 10, 44, 44, 4);
+        rect(8, 18, 48, 3, 2); rect(8, 31, 48, 3, 2); rect(8, 44, 48, 3, 2);
+        for (let i = 0; i < 44; i++) {
+            if (10+i < 54) { s[10+i][10+i] = 5; s[53-i][10+i] = 5; }
+        }
+        rect(8, 8, 8, 8, 7); rect(48, 8, 8, 8, 7); rect(8, 48, 8, 8, 7); rect(48, 48, 8, 8, 7);
+    } else if (type === 'barrel') {
+        // Top-down barrel (circular lid)
+        circle(32, 32, 26, 13); circle(32, 32, 24, 11); circle(32, 32, 22, 12);
+        circle(32, 32, 20, 11); circle(32, 32, 18, 12);
+        circle(32, 32, 10, 7); circle(32, 32, 8, 8); circle(32, 32, 6, 9);
+        rect(28, 14, 8, 4, 11); rect(28, 46, 8, 4, 11);
+        circle(24, 24, 4, 6);
+    } else if (type === 'steel_wall') {
+        // Top-down steel block
+        rect(4, 4, 56, 56, 13); rect(5, 5, 54, 54, 7); rect(6, 6, 52, 52, 8); rect(8, 8, 48, 48, 9);
+        rect(12, 12, 18, 18, 10); rect(34, 12, 18, 18, 10);
+        rect(12, 34, 18, 18, 10); rect(34, 34, 18, 18, 10);
+        [[14,14],[26,14],[36,14],[48,14],[14,26],[26,26],[36,26],[48,26],
+         [14,36],[26,36],[36,36],[48,36],[14,48],[26,48],[36,48],[48,48]].forEach(([x,y]) => {
+            rect(x, y, 4, 4, 7); rect(x+1, y+1, 2, 2, 10);
+        });
+    } else if (type === 'rock') {
+        // Top-down boulder
+        circle(32, 32, 26, 13); ellipse(28, 30, 24, 22, 2); ellipse(34, 34, 22, 20, 3);
+        ellipse(30, 32, 20, 18, 4); ellipse(32, 30, 16, 14, 5);
+        circle(14, 28, 10, 3); circle(50, 36, 8, 3);
+        ellipse(26, 26, 8, 6, 6); circle(38, 24, 4, 6);
+    } else if (type === 'debris') {
+        // Top-down rubble
+        ellipse(14, 14, 8, 6, 13); ellipse(14, 14, 6, 4, 3); ellipse(14, 14, 4, 2, 4);
+        ellipse(46, 18, 10, 7, 13); ellipse(46, 18, 8, 5, 3);
+        ellipse(20, 44, 12, 8, 13); ellipse(20, 44, 10, 6, 4);
+        ellipse(50, 48, 9, 7, 13); ellipse(50, 48, 7, 5, 3);
+        rect(28, 12, 4, 4, 4); rect(8, 32, 5, 5, 3); rect(38, 52, 5, 4, 3);
+    }
+    return s;
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function renderToCanvas(sprite, palette, scale) {
+    const size = sprite.length;
+    const canvas = document.createElement('canvas');
+    canvas.width = size * scale;
+    canvas.height = size * scale;
+    const ctx = canvas.getContext('2d');
+
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const color = palette[sprite[y][x]];
+            if (color && color !== 'transparent') {
+                ctx.fillStyle = color;
+                ctx.fillRect(x * scale, y * scale, scale, scale);
+            }
+        }
+    }
+    return canvas;
+}
+
+// ============================================================
+// SAMPLE MAP
+// ============================================================
+// Map is 16x12 cells, each cell is 64x64 (2x2 ground tiles)
+// 0 = ground, 1 = path_h, 2 = path_v, 3 = crate, 4 = barrel, 5 = steel_wall, 6 = rock
+// 10-13 = tank spawn points
+const SAMPLE_MAP = [
+    [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
+    [5,0,0,0,0,3,0,0,0,0,3,0,0,0,0,5],
+    [5,0,10,0,0,0,0,0,0,0,0,0,0,11,0,5],
+    [5,0,0,0,6,0,0,5,5,0,0,6,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+    [5,3,0,0,0,0,4,0,0,4,0,0,0,0,3,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,6,0,0,5,5,0,0,6,0,0,0,5],
+    [5,0,12,0,0,0,0,0,0,0,0,0,0,13,0,5],
+    [5,0,0,0,0,3,0,0,0,0,3,0,0,0,0,5],
+    [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
+];
+
+function renderMap() {
+    const theme = document.getElementById('theme-select').value;
+    const scale = parseInt(document.getElementById('scale').value);
+    const container = document.getElementById('map-preview');
+
+    const cellSize = 64 * scale / 4; // Each map cell is 64px, rendered at scale
+    const mapHeight = SAMPLE_MAP.length;
+    const mapWidth = SAMPLE_MAP[0].length;
+
+    container.innerHTML = '';
+    container.style.gridTemplateColumns = `repeat(${mapWidth}, ${cellSize * 2}px)`;
+
+    const groundTile = createGroundTile('textured');
+    const groundCanvas = renderToCanvas(groundTile, THEMES[theme].ground, scale / 2);
+
+    const sprites = {
+        3: createObstacle('crate'),
+        4: createObstacle('barrel'),
+        5: createObstacle('steel_wall'),
+        6: createObstacle('rock'),
+    };
+
+    const tankBase = createTankSprite();
+    const tankSprites = {
+        10: { sprite: tankBase, color: 'red' },
+        11: { sprite: rotateSprite90(rotateSprite90(tankBase)), color: 'green' },
+        12: { sprite: tankBase, color: 'blue' },
+        13: { sprite: rotateSprite90(rotateSprite90(tankBase)), color: 'yellow' },
+    };
+
+    for (let y = 0; y < mapHeight; y++) {
+        for (let x = 0; x < mapWidth; x++) {
+            const cell = document.createElement('div');
+            cell.className = 'map-cell';
+            cell.style.width = cellSize * 2 + 'px';
+            cell.style.height = cellSize * 2 + 'px';
+            cell.style.position = 'relative';
+
+            // Draw ground (2x2 tiles)
+            const groundLayer = document.createElement('canvas');
+            groundLayer.width = cellSize * 2;
+            groundLayer.height = cellSize * 2;
+            const gctx = groundLayer.getContext('2d');
+            gctx.drawImage(groundCanvas, 0, 0, cellSize, cellSize);
+            gctx.drawImage(groundCanvas, cellSize, 0, cellSize, cellSize);
+            gctx.drawImage(groundCanvas, 0, cellSize, cellSize, cellSize);
+            gctx.drawImage(groundCanvas, cellSize, cellSize, cellSize, cellSize);
+            groundLayer.style.position = 'absolute';
+            groundLayer.style.top = '0';
+            groundLayer.style.left = '0';
+            cell.appendChild(groundLayer);
+
+            // Draw obstacle or tank
+            const tileType = SAMPLE_MAP[y][x];
+            if (sprites[tileType]) {
+                const obsCanvas = renderToCanvas(sprites[tileType], THEMES[theme].obstacle, scale / 2);
+                obsCanvas.style.position = 'absolute';
+                obsCanvas.style.top = '0';
+                obsCanvas.style.left = '0';
+                cell.appendChild(obsCanvas);
+            } else if (tankSprites[tileType]) {
+                const { sprite, color } = tankSprites[tileType];
+                const tankCanvas = renderToCanvas(sprite, TANK_PALETTES[color], scale / 2);
+                tankCanvas.style.position = 'absolute';
+                tankCanvas.style.top = '0';
+                tankCanvas.style.left = '0';
+                cell.appendChild(tankCanvas);
+            }
+
+            container.appendChild(cell);
+        }
+    }
+
+    // Legend
+    const legend = document.getElementById('legend');
+    legend.innerHTML = `
+        <div class="legend-item"><div class="legend-color" style="background:#ff4444"></div> Player 1 (Red)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#44ff44"></div> Player 2 (Green)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#4488ff"></div> Player 3 (Blue)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#ffdd44"></div> Player 4 (Yellow)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#6a5030"></div> Crate (destructible)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#cc2222"></div> Barrel (destructible)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#555555"></div> Steel Wall (indestructible)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#777777"></div> Rock (indestructible)</div>
+    `;
+}
+
+function renderTanks() {
+    const scale = parseInt(document.getElementById('scale').value);
+    const container = document.getElementById('tanks');
+    container.innerHTML = '';
+
+    const base = createTankSprite();
+    const rotations = {
+        up: base,
+        right: rotateSprite90(base),
+        down: rotateSprite90(rotateSprite90(base)),
+        left: rotateSprite90(rotateSprite90(rotateSprite90(base)))
+    };
+
+    ['red', 'green', 'blue', 'yellow'].forEach(color => {
+        const group = document.createElement('div');
+        group.className = 'tank-group';
+        group.innerHTML = `<h4 class="${color}">${color.toUpperCase()}</h4>`;
+
+        const dirs = document.createElement('div');
+        dirs.className = 'tank-directions';
+
+        ['up', 'right', 'down', 'left'].forEach(dir => {
+            const canvas = renderToCanvas(rotations[dir], TANK_PALETTES[color], scale / 2);
+            canvas.className = 'asset-canvas';
+            canvas.title = dir;
+            dirs.appendChild(canvas);
+        });
+
+        group.appendChild(dirs);
+        container.appendChild(group);
+    });
+}
+
+function renderGroundTiles() {
+    const theme = document.getElementById('theme-select').value;
+    const scale = parseInt(document.getElementById('scale').value);
+    const container = document.getElementById('ground-tiles');
+    container.innerHTML = '';
+
+    ['base', 'textured', 'path_h', 'path_v'].forEach(type => {
+        const item = document.createElement('div');
+        item.className = 'asset-item';
+        const canvas = renderToCanvas(createGroundTile(type), THEMES[theme].ground, scale / 2);
+        canvas.className = 'asset-canvas';
+        item.appendChild(canvas);
+        const label = document.createElement('div');
+        label.className = 'asset-label';
+        label.textContent = type;
+        item.appendChild(label);
+        container.appendChild(item);
+    });
+}
+
+function renderObstacles() {
+    const theme = document.getElementById('theme-select').value;
+    const scale = parseInt(document.getElementById('scale').value);
+
+    const destContainer = document.getElementById('destructible');
+    destContainer.innerHTML = '';
+    ['crate', 'barrel', 'debris'].forEach(type => {
+        const item = document.createElement('div');
+        item.className = 'asset-item';
+        const canvas = renderToCanvas(createObstacle(type), THEMES[theme].obstacle, scale / 2);
+        canvas.className = 'asset-canvas';
+        item.appendChild(canvas);
+        const label = document.createElement('div');
+        label.className = 'asset-label';
+        label.textContent = type;
+        item.appendChild(label);
+        destContainer.appendChild(item);
+    });
+
+    const indestContainer = document.getElementById('indestructible');
+    indestContainer.innerHTML = '';
+    ['steel_wall', 'rock'].forEach(type => {
+        const item = document.createElement('div');
+        item.className = 'asset-item';
+        const canvas = renderToCanvas(createObstacle(type), THEMES[theme].obstacle, scale / 2);
+        canvas.className = 'asset-canvas';
+        item.appendChild(canvas);
+        const label = document.createElement('div');
+        label.className = 'asset-label';
+        label.textContent = type;
+        item.appendChild(label);
+        indestContainer.appendChild(item);
+    });
+}
+
+function renderAll() {
+    renderMap();
+    renderTanks();
+    renderGroundTiles();
+    renderObstacles();
+}
+
+document.getElementById('theme-select').addEventListener('change', renderAll);
+document.getElementById('scale').addEventListener('input', (e) => {
+    document.getElementById('scale-val').textContent = e.target.value;
+    renderAll();
+});
+
+renderAll();
+    </script>
+</body>
+</html>
