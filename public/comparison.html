@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprite Evolution — Asset Forge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/comparison.css">
+</head>
+<body>
+
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <div class="top-bar-left">
+        <a href="/" class="logo" title="Return to Asset Forge">
+          <span class="logo-icon">&#9881;</span>
+          <span class="logo-text">Asset Forge</span>
+        </a>
+        <nav class="breadcrumb">
+          <span class="breadcrumb-item breadcrumb-home">Home</span>
+          <span class="breadcrumb-item breadcrumb-current">Sprite Evolution</span>
+        </nav>
+      </div>
+      <div class="top-bar-right">
+        <a href="/review.html" class="btn btn-small btn-outline">Sprite Review</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <div class="section-header">
+      <h2 class="section-title">Sprite Evolution Across Rounds</h2>
+    </div>
+    <p class="comp-intro">Each row shows the same prompt generated across different eval rounds. Sprites differ between rounds because the LLM generates fresh output each time. Human scores were collected blind (LLM scores hidden). The goal: calibrate the judge until LLM and human scores converge.</p>
+
+    <div id="legend" class="comp-legend">
+      <span><strong>H:</strong> Human score</span>
+      <span><strong>L:</strong> LLM judge score</span>
+      <span class="comp-legend-divergent">Highlighted = |H - L| &gt; 1</span>
+    </div>
+
+    <div id="comparison-container"></div>
+
+    <div id="calibration-evolution" class="comp-calibration-section">
+      <div class="section-header mt-lg">
+        <h3 class="section-title">Judge Calibration Over Time</h3>
+      </div>
+      <div id="calibration-table-container"></div>
+    </div>
+  </main>
+
+  <script src="/js/comparison.js"></script>
+</body>
+</html>

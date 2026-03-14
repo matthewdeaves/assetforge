@@ -1,0 +1,389 @@
+/* ============================================================
+   SPRITE REVIEW — Extends the Asset Forge base theme (style.css)
+   ============================================================ */
+
+/* --- Header additions --- */
+.top-bar-right .form-select {
+  max-width: 350px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-on-accent);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.review-progress {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(250, 247, 242, 0.7);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* --- Re-grade banner --- */
+.review-regrade-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.review-regrade-banner p {
+  flex: 1;
+  margin: 0;
+  color: var(--status-warning);
+  font-weight: 500;
+}
+
+/* --- Grading layout --- */
+.review-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.review-canvas-panel {
+  position: sticky;
+  top: 80px;
+}
+
+.review-canvas-panel .grid-viewport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+#sprite-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* --- Prompt section --- */
+.review-prompt-section {
+  margin-bottom: var(--space-md);
+}
+
+.review-prompt-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-top: var(--space-xs);
+}
+
+.review-quality-hint {
+  margin-top: var(--space-xs);
+  font-size: 0.8rem;
+  color: var(--accent-orange);
+  font-style: italic;
+}
+
+/* --- Stats row --- */
+.review-stats-row {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.review-stats-row span {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  background: var(--surface-warm);
+  border: 1px solid var(--border-light);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* --- Dimensions --- */
+.review-dimensions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.review-dimension {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.review-dimension.focused {
+  background: var(--surface-warm);
+  border-color: var(--border-light);
+}
+
+.review-dim-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-dim-name {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.review-dim-rubric {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+/* --- Score buttons --- */
+.review-score-buttons {
+  display: flex;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.review-score-btn {
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--surface-paper);
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.review-score-btn:hover {
+  border-color: var(--accent-teal);
+  color: var(--accent-teal);
+  background: rgba(42, 123, 111, 0.06);
+}
+
+.review-score-btn.selected {
+  background: var(--accent-orange);
+  border-color: var(--accent-orange-dark);
+  color: var(--text-on-accent);
+  box-shadow: 0 2px 4px rgba(196, 98, 45, 0.25);
+}
+
+/* --- Notes field --- */
+.review-notes-section {
+  margin-bottom: var(--space-md);
+}
+
+.review-notes-input {
+  min-height: 48px;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.review-breakdown-notes {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--surface-base);
+  border-left: 3px solid var(--accent-teal);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* --- Shortcut hints --- */
+.review-shortcut-hints {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.review-shortcut-hints kbd {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--surface-warm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  box-shadow: 0 1px 0 var(--border-medium);
+}
+
+/* --- Action buttons --- */
+.review-action-buttons {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  border-top: 2px solid var(--border-light);
+  padding-top: var(--space-md);
+}
+
+.review-action-buttons kbd {
+  font-size: 0.65rem;
+  opacity: 0.5;
+  margin-left: var(--space-xs);
+}
+
+/* --- Summary view --- */
+.review-summary-stats {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+/* --- Calibration table --- */
+.review-calibration-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.review-calibration-table th,
+.review-calibration-table td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.review-calibration-table th {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--surface-warm);
+}
+
+.review-calibration-table tr.flagged {
+  background: var(--status-error-bg);
+}
+
+.review-calibration-table tr.flagged td:first-child {
+  color: var(--status-error);
+  font-weight: 600;
+}
+
+/* --- Per-sprite breakdown --- */
+.review-sprite-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.review-breakdown-row {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-paper);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  align-items: flex-start;
+}
+
+.review-breakdown-thumb {
+  flex: 0 0 auto;
+}
+
+.review-breakdown-thumb canvas {
+  border: 2px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  image-rendering: pixelated;
+}
+
+.review-breakdown-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-breakdown-prompt {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.review-breakdown-scores {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-xs);
+}
+
+.review-breakdown-dim {
+  text-align: center;
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  background: var(--surface-warm);
+  border: 1px solid var(--border-light);
+  font-size: 0.75rem;
+}
+
+.review-breakdown-dim .dim-label {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.review-breakdown-dim.divergent {
+  background: var(--status-error-bg);
+  border-color: var(--status-error);
+}
+
+/* --- Save status --- */
+.review-save-status {
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  border: 2px solid;
+}
+
+.review-save-status.success {
+  background: var(--status-success-bg);
+  border-color: var(--status-success);
+  color: var(--status-success);
+}
+
+.review-save-status.error {
+  background: var(--status-error-bg);
+  border-color: var(--status-error);
+  color: var(--status-error);
+}
+
+.review-save-status button {
+  margin-left: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+  .review-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .review-canvas-panel {
+    position: static;
+    display: flex;
+    justify-content: center;
+  }
+}

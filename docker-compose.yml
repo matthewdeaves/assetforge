@@ -1,0 +1,13 @@
+services:
+  asset-forge:
+    build: .
+    ports:
+      - "3777:3777"
+    volumes:
+      - ./data:/app/data
+      - ./openrouterkey:/app/openrouterkey:ro
+      - ./eval/results:/app/eval/results
+    environment:
+      - OPENROUTER_KEY_FILE=/app/openrouterkey
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-anthropic/claude-sonnet-4-6}
+      - NODE_ENV=production

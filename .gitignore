@@ -1,1 +1,9 @@
 openrouterkey
+node_modules/
+data/
+*.pict
+*.bin
+*.dsk
+*.tmp
+.DS_Store
+# eval/results/ — kept in repo for calibration history

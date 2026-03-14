@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprite Review — Asset Forge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/review.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar (matches main site) -->
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <div class="top-bar-left">
+        <a href="/" class="logo" title="Return to Asset Forge">
+          <span class="logo-icon">&#9881;</span>
+          <span class="logo-text">Asset Forge</span>
+        </a>
+        <nav class="breadcrumb">
+          <span class="breadcrumb-item breadcrumb-home">Home</span>
+          <span class="breadcrumb-item breadcrumb-current">Sprite Review</span>
+        </nav>
+      </div>
+      <div class="top-bar-right">
+        <a href="/comparison.html" class="btn btn-small btn-outline" title="Compare sprites across rounds">
+          <span class="btn-icon">&#9878;</span> Evolution
+        </a>
+        <select id="report-select" class="form-select"><option value="">Loading reports…</option></select>
+        <span id="progress" class="review-progress">—</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="empty-state-icon">&#128269;</div>
+      <div class="empty-state-title" id="empty-message">No reports found</div>
+      <div class="empty-state-text">Run <code>node eval/run.js</code> to generate sprites for review.</div>
+    </div>
+
+    <div id="regrade-banner" class="review-regrade-banner" style="display:none;">
+      <p>This report already has human scores.</p>
+      <button id="btn-view-results" class="btn btn-secondary">View Results</button>
+      <button id="btn-regrade" class="btn btn-ghost">Re-Grade</button>
+    </div>
+
+    <div id="sprite-view" style="display:none;">
+      <div class="review-layout">
+        <div class="review-canvas-panel">
+          <div class="grid-viewport">
+            <canvas id="sprite-canvas" width="256" height="256"></canvas>
+          </div>
+        </div>
+        <div class="review-scoring-panel">
+          <div class="card">
+            <div class="review-prompt-section">
+              <label class="form-label">Prompt</label>
+              <div id="prompt-text" class="review-prompt-text"></div>
+              <div id="quality-hint" class="review-quality-hint" style="display:none;"></div>
+            </div>
+            <div class="review-stats-row">
+              <span id="stat-coverage">—</span>
+              <span id="stat-commands">—</span>
+              <span id="stat-palette">—</span>
+            </div>
+            <div id="dimensions" class="review-dimensions"></div>
+            <div class="review-notes-section">
+              <label class="form-label">Notes (optional)</label>
+              <textarea id="sprite-notes" class="form-textarea review-notes-input" placeholder="Why did you score this way? What stands out?" rows="2"></textarea>
+            </div>
+            <div class="review-shortcut-hints">
+              <kbd>1</kbd>–<kbd>5</kbd> score &nbsp; <kbd>Tab</kbd> next dim &nbsp; <kbd>Enter</kbd> next &nbsp; <kbd>Esc</kbd> skip
+            </div>
+            <div class="review-action-buttons">
+              <button id="btn-skip" class="btn btn-ghost">Skip <kbd>Esc</kbd></button>
+              <button id="btn-next" class="btn btn-primary" disabled>Next <kbd>Enter</kbd></button>
+              <button id="btn-finish" class="btn btn-ghost btn-small">Finish Early</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="summary-view" style="display:none;">
+      <div class="section-header">
+        <h2 class="section-title">Calibration Summary</h2>
+      </div>
+      <div id="summary-stats" class="review-summary-stats"></div>
+      <div class="card">
+        <table id="calibration-table" class="review-calibration-table">
+          <thead>
+            <tr>
+              <th>Dimension</th>
+              <th>Human Avg</th>
+              <th>LLM Avg</th>
+              <th>Difference (MAD)</th>
+              <th>Agreement Rate</th>
+            </tr>
+          </thead>
+          <tbody id="calibration-body"></tbody>
+        </table>
+      </div>
+      <div class="section-header mt-lg">
+        <h3 class="section-title">Per-Sprite Breakdown</h3>
+      </div>
+      <div id="sprite-breakdown" class="review-sprite-breakdown"></div>
+      <div id="save-status" class="review-save-status"></div>
+    </div>
+  </main>
+
+  <script src="/js/review.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+.git/
+.gitignore
+.dockerignore
+node_modules/
+data/
+specs/
+.specify/
+.claude/
+archive/
+CLAUDE.md
+*.md
+*.pict
+*.bin
+*.dsk
+openrouterkey
+eval/results/
