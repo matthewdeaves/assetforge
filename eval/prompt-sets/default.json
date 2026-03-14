@@ -1,6 +1,6 @@
 {
   "name": "default",
-  "description": "Default test prompt set: 20 prompts across 5 categories (4 per category)",
+  "description": "Default test prompt set: 20 prompts across 5 categories (4 per category). All sprites specify viewpoint for consistency.",
   "prompts": [
     {
       "prompt": "top-down military tank with visible tracks, hull, and turret",
@@ -10,137 +10,137 @@
       "hint": "Should have distinct tracks on each side, a central hull, and a turret with barrel on top"
     },
     {
-      "prompt": "side-view red sports car",
+      "prompt": "side-view red sports car facing right",
       "width": 64,
       "height": 32,
       "category": "vehicles",
-      "hint": "Should have wheels, body, windows, and a low sporty profile"
+      "hint": "Should have wheels, body, windows, and a low sporty profile. Front of car on the right side"
     },
     {
-      "prompt": "top-down blue pickup truck",
+      "prompt": "top-down blue pickup truck facing up",
       "width": 64,
       "height": 64,
       "category": "vehicles",
-      "hint": "Should have a cab, open truck bed, four wheels visible, and clear front/back orientation"
+      "hint": "Should have a cab at the top, open truck bed below, four wheels visible, and clear front/back orientation"
     },
     {
-      "prompt": "side-view yellow school bus",
+      "prompt": "side-view yellow school bus facing left",
       "width": 64,
       "height": 32,
       "category": "vehicles",
-      "hint": "Should have a long rectangular body, multiple windows in a row, wheels, and a flat front"
+      "hint": "Should have a long rectangular body, multiple windows in a row, wheels, and a flat front on the left"
     },
     {
-      "prompt": "pixel art knight with sword and shield",
+      "prompt": "front-facing pixel art knight holding a sword in one hand and a shield in the other",
       "width": 32,
       "height": 32,
       "category": "characters",
-      "hint": "Should have helmet, armor body, shield on one side, sword on the other"
+      "hint": "Should have helmet, armor body, humanoid proportions, shield on one side, sword on the other"
     },
     {
-      "prompt": "wizard with pointed hat and staff",
+      "prompt": "front-facing wizard with pointed hat and holding a staff",
       "width": 32,
       "height": 32,
       "category": "characters",
-      "hint": "Should have a tall pointed hat, robes, and a staff with a glowing tip"
+      "hint": "Should have a tall pointed hat, robes, humanoid proportions, and a staff with a glowing tip"
     },
     {
-      "prompt": "skeleton warrior with a bone club",
+      "prompt": "front-facing skeleton warrior holding a bone club",
       "width": 32,
       "height": 32,
       "category": "characters",
-      "hint": "Should have a visible ribcage, skull head, bony limbs, and a crude club weapon"
+      "hint": "Should have a visible ribcage, skull head, bony limbs, and a crude club weapon in one hand"
     },
     {
-      "prompt": "small red dragon with wings spread",
+      "prompt": "top-down small red dragon with wings spread, viewed from above",
       "width": 32,
       "height": 32,
       "category": "characters",
-      "hint": "Should have a reptilian body, two spread wings, a tail, and a head with horns or snout"
+      "hint": "Should have a reptilian body in the centre, two spread wings on either side, a tail, and a head with horns or snout"
     },
     {
-      "prompt": "grass ground tile with subtle texture variation",
+      "prompt": "top-down grass ground tile with subtle texture variation",
       "width": 32,
       "height": 32,
       "category": "terrain",
-      "hint": "Should tile seamlessly, use 2-3 shades of green with small detail patches"
+      "hint": "Should tile seamlessly when repeated, use 2-3 shades of green with small detail patches for individual blades"
     },
     {
-      "prompt": "water tile with wave pattern",
+      "prompt": "top-down water tile with organic wave pattern",
       "width": 32,
       "height": 32,
       "category": "terrain",
-      "hint": "Should use blues and white highlights to suggest gentle waves"
+      "hint": "Should use blues and white highlights in curved organic shapes to suggest gentle waves, not straight lines. Must tile when repeated"
     },
     {
-      "prompt": "sandy desert tile with small rocks",
+      "prompt": "top-down sandy desert tile with small scattered rocks",
       "width": 32,
       "height": 32,
       "category": "terrain",
-      "hint": "Should use warm yellows and tans with a few darker speckles for pebbles"
+      "hint": "Should use warm yellows and tans with a few darker speckles for pebbles. Must tile when repeated"
     },
     {
-      "prompt": "cobblestone road tile",
+      "prompt": "top-down cobblestone road tile with irregular rounded stones",
       "width": 32,
       "height": 32,
       "category": "terrain",
-      "hint": "Should have irregular rounded stone shapes with mortar lines between them"
+      "hint": "Should have irregular rounded stone shapes with darker mortar lines between them. Must tile when repeated"
     },
     {
-      "prompt": "wooden crate with metal corner brackets",
+      "prompt": "three-quarter view wooden crate with metal corner brackets",
       "width": 32,
       "height": 32,
       "category": "items",
-      "hint": "Should have wood plank texture, cross beams, and small metal brackets at corners"
+      "hint": "Should have wood plank texture on the front face, a visible top face for depth, and small metal brackets at corners"
     },
     {
-      "prompt": "treasure chest with gold trim",
+      "prompt": "three-quarter view treasure chest with gold trim, lid closed",
       "width": 32,
       "height": 32,
       "category": "items",
-      "hint": "Should have a rounded lid, dark wood body, gold lock and trim details"
+      "hint": "Should have a rounded lid, dark wood body, gold lock and trim details, with visible front and top faces"
     },
     {
-      "prompt": "red health potion bottle",
+      "prompt": "front-view red health potion in a round glass bottle with a cork",
       "width": 32,
       "height": 32,
       "category": "items",
-      "hint": "Should have a round glass bottle shape with red liquid, a cork, and a small label"
+      "hint": "Should have a round glass bottle shape with red liquid visible inside, a cork stopper at the top, and a small label"
     },
     {
-      "prompt": "iron key with ornate handle",
+      "prompt": "flat iron key with ornate loop handle, viewed from above",
       "width": 32,
       "height": 32,
       "category": "items",
-      "hint": "Should have a long shaft with teeth at one end and a decorative loop handle at the other"
+      "hint": "Should have a long shaft with teeth at one end and a decorative loop handle at the other, lying flat"
     },
     {
-      "prompt": "large grey boulder",
+      "prompt": "top-down large grey boulder with cracks and moss patches",
       "width": 32,
       "height": 32,
       "category": "obstacles",
-      "hint": "Should have an irregular rounded shape with shading to suggest 3D form"
+      "hint": "Should have an irregular rounded shape with shading to suggest 3D form, visible cracks, and small green moss patches"
     },
     {
-      "prompt": "green leafy tree viewed from above",
+      "prompt": "top-down green leafy tree viewed from above with visible trunk centre",
       "width": 32,
       "height": 32,
       "category": "obstacles",
-      "hint": "Should have a circular canopy with multiple green shades and a small brown trunk visible"
+      "hint": "Should have an irregular circular canopy with multiple green shades, not perfectly round, with a small brown trunk visible in the centre"
     },
     {
-      "prompt": "wooden barrel with metal bands",
+      "prompt": "three-quarter view wooden barrel with two metal bands",
       "width": 32,
       "height": 32,
       "category": "obstacles",
-      "hint": "Should have a cylindrical shape with curved wood staves and two or three horizontal metal bands"
+      "hint": "Should have a cylindrical shape with curved wood staves, a visible top face, and two horizontal metal bands"
     },
     {
-      "prompt": "brick wall segment",
+      "prompt": "front-view brick wall segment with alternating brick pattern",
       "width": 32,
       "height": 32,
       "category": "obstacles",
-      "hint": "Should have a clear brick pattern with alternating rows, mortar lines, and slight colour variation between bricks"
+      "hint": "Should have a clear brick pattern with alternating offset rows, visible mortar lines, and slight colour variation between individual bricks"
     }
   ]
 }
