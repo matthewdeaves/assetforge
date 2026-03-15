@@ -16,7 +16,7 @@ const DIMENSION_RUBRICS = {
       2: 'For multi-part subjects: parts are vaguely suggested but heavily overlap or share colors. For simple subjects: the form is too broken up or inconsistent to read as a cohesive object.',
       3: 'For multi-part subjects: major components are distinguishable but boundaries are unclear. For simple subjects: the form is mostly cohesive but has distracting artifacts or color breaks.',
       4: 'For multi-part subjects: most components are clearly separated with distinct colors and boundaries. For simple subjects: the form reads cleanly as the intended object with appropriate internal variation (e.g., shading, texture).',
-      5: 'For multi-part subjects: every logical component has its own color family and crisp boundaries (e.g., tank has distinct tracks, hull, turret, barrel). For simple subjects: the form is immediately recognizable with natural, purposeful internal detail.',
+      5: 'For multi-part subjects: every logical component has its own color family, crisp boundaries, AND fine internal detail within each component (e.g., tank has distinct tracks with individual track plates, hull with panel lines, turret with barrel). A score of 5 requires both separation AND internal detail — clear separation alone is a 4. For simple subjects: the form is immediately recognizable with natural, purposeful internal detail.',
     },
   },
   colorUsage: {
@@ -58,11 +58,18 @@ const DIMENSION_RUBRICS = {
 
 CRITICAL: Imagine showing ONLY the rendered pixel grid to someone who has never seen the prompt. Could they identify the subject? If not, the score cannot be above 3.
 
-Common failure modes to watch for:
+Common failure modes — if you see these, score LOW regardless of how well the commands describe the intent:
 - A "tank" that looks like a green safe or rectangle (score 2-3, not 5)
 - A "water tile" made of straight horizontal lines that don't look like water (score 2, not 5)
 - A "knight" where you can see sword and shield but the figure doesn't read as a person (score 3, not 5)
+- A "dragon" that is just a coloured blob with a face but no dragon silhouette (score 1-2, not 4)
+- A "skeleton" that doesn't look skeletal — no visible bones or ribcage (score 1-2, not 4)
+- A "pickup truck" that is just a rectangle with no distinguishing vehicle features (score 1, not 4)
+- A "barrel" that looks like a burger or other unrelated object (score 2, not 4)
 - Correct colours for the subject but the shape/silhouette is wrong or ambiguous (score 3, not 4)
+- An item drawn from conflicting perspectives (e.g., sides of a box from different viewpoints) (score 2-3)
+
+The SILHOUETTE is the most important factor. If the overall shape doesn't read as the subject, the score cannot be above 3 even if colours, details, and components are good.
 
 Do NOT give credit for intent. Only score what is visually present in the pixels.`,
     anchors: {
