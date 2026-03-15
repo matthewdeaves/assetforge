@@ -9,7 +9,9 @@ const DIM_NAMES = {
   pixelArtDiscipline: 'Pixel Art',
   promptAdherence: 'Prompt',
 };
-const PIXEL_SCALE = 4;
+function getPixelScale(width, height) {
+  return Math.min(4, Math.floor(200 / Math.max(width, height)));
+}
 
 async function fetchReports() {
   const res = await fetch('/api/eval/reports');
@@ -27,8 +29,9 @@ function renderSprite(pixels, palette, canvasEl) {
   if (!pixels || !palette) return;
   const height = pixels.length;
   const width = pixels[0].length;
-  canvasEl.width = width * PIXEL_SCALE;
-  canvasEl.height = height * PIXEL_SCALE;
+  const scale = getPixelScale(width, height);
+  canvasEl.width = width * scale;
+  canvasEl.height = height * scale;
   const c = canvasEl.getContext('2d');
   c.clearRect(0, 0, canvasEl.width, canvasEl.height);
   for (let y = 0; y < height; y++) {
@@ -38,7 +41,7 @@ function renderSprite(pixels, palette, canvasEl) {
       const color = palette[idx];
       if (!color) continue;
       c.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-      c.fillRect(x * PIXEL_SCALE, y * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+      c.fillRect(x * scale, y * scale, scale, scale);
     }
   }
 }

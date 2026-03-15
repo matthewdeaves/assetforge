@@ -17,6 +17,7 @@ function parseArgs(argv) {
     promptSet: 'default',
     genModel: null,
     judgeModel: null,
+    variants: 1,
   };
 
   for (let i = 2; i < argv.length; i++) {
@@ -33,6 +34,15 @@ function parseArgs(argv) {
       case '--judge-model':
         args.judgeModel = argv[++i];
         break;
+      case '--variants': {
+        const val = argv[++i];
+        if (val === undefined || isNaN(parseInt(val))) {
+          console.error('--variants requires an integer value (e.g., --variants 3)');
+          process.exit(1);
+        }
+        args.variants = Math.max(1, parseInt(val));
+        break;
+      }
       default:
         console.error(`Unknown argument: ${argv[i]}`);
         process.exit(1);
@@ -79,6 +89,18 @@ function loadPromptSet(name) {
     }
     if (typeof p.width !== 'number' || typeof p.height !== 'number') {
       console.error(`Prompt ${i} ("${p.prompt.slice(0, 30)}..."): missing or invalid width/height`);
+      process.exit(1);
+    }
+    if (p.difficulty !== undefined && !['simple', 'medium', 'hard'].includes(p.difficulty)) {
+      console.error(`Prompt ${i} ("${p.prompt.slice(0, 30)}..."): difficulty must be "simple", "medium", or "hard"`);
+      process.exit(1);
+    }
+    if (p.colorHints !== undefined && typeof p.colorHints !== 'string') {
+      console.error(`Prompt ${i} ("${p.prompt.slice(0, 30)}..."): colorHints must be a string`);
+      process.exit(1);
+    }
+    if (p.expectedComponents !== undefined && (!Array.isArray(p.expectedComponents) || !p.expectedComponents.every(c => typeof c === 'string'))) {
+      console.error(`Prompt ${i} ("${p.prompt.slice(0, 30)}..."): expectedComponents must be an array of strings`);
       process.exit(1);
     }
   }
@@ -182,6 +204,7 @@ async function runEval(args) {
   console.log(`Prompt set:    ${promptSet.name} (${promptSet.prompts.length} prompts)`);
   console.log(`Gen model:     ${genModel}`);
   console.log(`Judge model:   ${judgeModel}`);
+  if (args.variants > 1) console.log(`Variants:      ${args.variants} per prompt`);
   console.log(`${'='.repeat(40)}\n`);
 
   const results = [];
@@ -194,7 +217,7 @@ async function runEval(args) {
     }
 
     const testPrompt = promptSet.prompts[i];
-    console.log(`[${i + 1}/${promptSet.prompts.length}] "${testPrompt.prompt.slice(0, 50)}..."`);
+    const numVariants = args.variants;
 
     const result = {
       prompt: testPrompt,
@@ -209,51 +232,146 @@ async function runEval(args) {
       error: null,
     };
 
-    try {
-      // Generate sprite
-      const genStart = Date.now();
-      const generated = await generateSpriteWithPrompt(
-        testPrompt.prompt,
-        systemPromptMod.buildSystemPrompt,
-        testPrompt.width,
-        testPrompt.height,
-        genModel,
-      );
-      result.generationTimeMs = Date.now() - genStart;
-      result.commands = generated.commands;
-      result.palette = generated.palette || [{ r: 0, g: 0, b: 0 }]; // fallback
+    if (numVariants > 1) {
+      // Multi-shot: generate N variants, select the best
+      const variants = [];
+      let totalGenMs = 0;
+      let totalJudgeMs = 0;
 
-      // Rasterize
-      const { pixels } = rasterize(testPrompt.width, testPrompt.height, result.commands, result.palette.length);
-      result.pixels = pixels;
+      for (let v = 0; v < numVariants; v++) {
+        if (interrupted) break;
+        console.log(`[${i + 1}/${promptSet.prompts.length}] "${testPrompt.prompt.slice(0, 50)}..." (variant ${v + 1}/${numVariants})`);
 
-      // Compute stats
-      result.stats = computeStats(pixels, result.palette, result.commands);
+        const variant = {
+          commands: null,
+          pixels: null,
+          palette: null,
+          stats: null,
+          scores: null,
+          generationTimeMs: 0,
+          judgingTimeMs: 0,
+          error: null,
+        };
 
-      // Judge (per-dimension LLM calls + code-based checks)
-      const judgeStart = Date.now();
-      result.scores = await judgeSprite(
-        testPrompt.prompt,
-        result.commands,
-        result.stats,
-        testPrompt.hint || null,
-        judgeModel,
-        testPrompt.width,
-        testPrompt.height,
-        result.pixels,
-        result.palette,
-      );
-      result.judgingTimeMs = Date.now() - judgeStart;
+        try {
+          const genStart = Date.now();
+          const generated = await generateSpriteWithPrompt(
+            testPrompt.prompt,
+            systemPromptMod.buildSystemPrompt,
+            testPrompt.width,
+            testPrompt.height,
+            genModel,
+          );
+          variant.generationTimeMs = Date.now() - genStart;
+          variant.commands = generated.commands;
+          variant.palette = generated.palette || [{ r: 0, g: 0, b: 0 }];
 
-      if (result.scores.status === 'judge-failed') {
-        result.status = 'judge-failed';
+          const { pixels } = rasterize(testPrompt.width, testPrompt.height, variant.commands, variant.palette.length);
+          variant.pixels = pixels;
+          variant.stats = computeStats(pixels, variant.palette, variant.commands);
+
+          const judgeStart = Date.now();
+          variant.scores = await judgeSprite(
+            testPrompt.prompt,
+            variant.commands,
+            variant.stats,
+            testPrompt.hint || null,
+            judgeModel,
+            testPrompt.width,
+            testPrompt.height,
+            variant.pixels,
+            variant.palette,
+          );
+          variant.judgingTimeMs = Date.now() - judgeStart;
+
+          console.log(`  → Variant ${v + 1}: Overall ${variant.scores.overall.toFixed(1)}/5`);
+        } catch (err) {
+          variant.error = err.message;
+          console.log(`  ✗ Variant ${v + 1} failed: ${err.message}`);
+        }
+
+        totalGenMs += variant.generationTimeMs;
+        totalJudgeMs += variant.judgingTimeMs;
+        variants.push(variant);
       }
 
-      console.log(`  → Overall: ${result.scores.overall.toFixed(1)}/5 | Coverage: ${result.stats.coveragePercent.toFixed(0)}% | Commands: ${result.stats.commandCount} (${(result.generationTimeMs / 1000).toFixed(1)}s gen, ${(result.judgingTimeMs / 1000).toFixed(1)}s judge)`);
-    } catch (err) {
-      result.status = 'generation-failed';
-      result.error = err.message;
-      console.log(`  ✗ Failed: ${err.message}`);
+      // Select best variant by overall score
+      let bestIdx = 0;
+      let bestScore = -1;
+      for (let v = 0; v < variants.length; v++) {
+        const s = variants[v].scores ? variants[v].scores.overall : -1;
+        if (s > bestScore) {
+          bestScore = s;
+          bestIdx = v;
+        }
+      }
+
+      const selected = variants[bestIdx];
+      if (selected.scores && !selected.error) {
+        result.commands = selected.commands;
+        result.pixels = selected.pixels;
+        result.palette = selected.palette;
+        result.stats = selected.stats;
+        result.scores = selected.scores;
+        result.status = selected.scores.status === 'judge-failed' ? 'judge-failed' : 'success';
+      } else {
+        result.status = 'generation-failed';
+        result.error = selected.error || 'All variants failed';
+      }
+
+      result.generationTimeMs = totalGenMs;
+      result.judgingTimeMs = totalJudgeMs;
+      result.selectedVariantIndex = bestIdx;
+      result.variants = variants;
+
+      if (result.scores) {
+        console.log(`  ★ Selected variant ${bestIdx + 1} (${bestScore.toFixed(1)}/5) | Coverage: ${result.stats.coveragePercent.toFixed(0)}% | Commands: ${result.stats.commandCount} (${(totalGenMs / 1000).toFixed(1)}s gen, ${(totalJudgeMs / 1000).toFixed(1)}s judge)`);
+      }
+    } else {
+      // Single-shot: current behaviour
+      console.log(`[${i + 1}/${promptSet.prompts.length}] "${testPrompt.prompt.slice(0, 50)}..."`);
+
+      try {
+        const genStart = Date.now();
+        const generated = await generateSpriteWithPrompt(
+          testPrompt.prompt,
+          systemPromptMod.buildSystemPrompt,
+          testPrompt.width,
+          testPrompt.height,
+          genModel,
+        );
+        result.generationTimeMs = Date.now() - genStart;
+        result.commands = generated.commands;
+        result.palette = generated.palette || [{ r: 0, g: 0, b: 0 }];
+
+        const { pixels } = rasterize(testPrompt.width, testPrompt.height, result.commands, result.palette.length);
+        result.pixels = pixels;
+        result.stats = computeStats(pixels, result.palette, result.commands);
+
+        const judgeStart = Date.now();
+        result.scores = await judgeSprite(
+          testPrompt.prompt,
+          result.commands,
+          result.stats,
+          testPrompt.hint || null,
+          judgeModel,
+          testPrompt.width,
+          testPrompt.height,
+          result.pixels,
+          result.palette,
+        );
+        result.judgingTimeMs = Date.now() - judgeStart;
+
+        if (result.scores.status === 'judge-failed') {
+          result.status = 'judge-failed';
+        }
+
+        console.log(`  → Overall: ${result.scores.overall.toFixed(1)}/5 | Coverage: ${result.stats.coveragePercent.toFixed(0)}% | Commands: ${result.stats.commandCount} (${(result.generationTimeMs / 1000).toFixed(1)}s gen, ${(result.judgingTimeMs / 1000).toFixed(1)}s judge)`);
+      } catch (err) {
+        result.status = 'generation-failed';
+        result.error = err.message;
+        console.log(`  ✗ Failed: ${err.message}`);
+      }
     }
 
     results.push(result);
@@ -285,13 +403,13 @@ async function runEval(args) {
   // Print summary table
   console.log(`\n${'='.repeat(60)}`);
   console.log(`SUMMARY: ${successful.length}/${results.length} prompts scored | ${(totalTimeMs / 1000).toFixed(1)}s total`);
-  console.log(`Scale: 1-5 (code-based: spatialCoverage, detailDensity | LLM-judged: rest)`);
+  console.log(`Scale: 1-5 (code-based: detailDensity | LLM-judged: rest)`);
   console.log(`${'='.repeat(60)}`);
 
   if (successful.length > 0) {
     console.log(`\n  Dimension             Avg Score  Method`);
     console.log(`  ${'─'.repeat(50)}`);
-    const codeBasedDims = ['spatialCoverage', 'detailDensity'];
+    const codeBasedDims = ['detailDensity'];
     for (const dim of DIMENSIONS) {
       const method = codeBasedDims.includes(dim) ? 'code' : 'LLM';
       console.log(`  ${dim.padEnd(24)} ${averages[dim].toFixed(1)}/5     ${method}`);
@@ -311,6 +429,7 @@ async function runEval(args) {
     generationModel: genModel,
     judgingModel: judgeModel,
     promptSetName: promptSet.name,
+    ...(args.variants > 1 ? { variantsPerPrompt: args.variants } : {}),
     results,
     summary,
   };

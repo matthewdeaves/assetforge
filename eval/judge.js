@@ -44,13 +44,11 @@ const DIMENSION_RUBRICS = {
   },
   spatialCoverage: {
     name: 'Spatial Coverage',
-    description: 'Does the sprite fill the grid appropriately?',
+    description: 'Consider whether coverage is appropriate for the subject\'s natural shape — a round boulder at 60% is fine, a thin key at 25% is fine, but a bus filling only 40% of the grid is too small. The raw pixel coverage percentage is provided in the statistics for reference.',
     anchors: {
-      1: 'Sprite covers less than 20% of the grid — mostly transparent.',
-      2: 'Sprite covers 20-40% — too small or off-center, large empty areas.',
-      3: 'Sprite covers 40-60% — decent but leaves noticeable gaps or is poorly centered.',
-      4: 'Sprite covers 60-80% — fills most of the grid with appropriate transparent edges.',
-      5: 'Sprite covers 80%+ — fills the grid edge-to-edge with only a thin transparent border, well-centered.',
+      1: 'Sprite is far too small or poorly positioned for its subject — large empty areas where the subject should fill.',
+      3: 'Coverage is adequate but not optimal — subject could use the grid space better.',
+      5: 'Coverage is ideal for the subject\'s natural shape — fills the grid appropriately with transparent edges only where the subject\'s shape demands them.',
     },
   },
   pixelArtDiscipline: {
@@ -227,14 +225,6 @@ function buildUserMessage(prompt, commands, stats, hint, width, height, pixels) 
 function computeCodeBasedScores(stats) {
   const scores = {};
 
-  // Spatial coverage — deterministic from pixel data
-  const cov = stats.coveragePercent;
-  if (cov >= 80) scores.spatialCoverage = 5;
-  else if (cov >= 60) scores.spatialCoverage = 4;
-  else if (cov >= 40) scores.spatialCoverage = 3;
-  else if (cov >= 20) scores.spatialCoverage = 2;
-  else scores.spatialCoverage = 1;
-
   // Detail density — deterministic from command count
   const cmds = stats.commandCount;
   if (cmds >= 60) scores.detailDensity = 5;
@@ -304,13 +294,11 @@ async function judgeSprite(prompt, commands, stats, hint, judgeModel, width, hei
   }
 
   // LLM judges each dimension independently
-  // spatialCoverage and detailDensity use code-based scores (deterministic, fast)
-  // componentSeparation, colorUsage, promptAdherence require LLM judgment
-  const llmDimensions = ['componentSeparation', 'colorUsage', 'pixelArtDiscipline', 'promptAdherence'];
+  // detailDensity uses code-based score (deterministic, fast)
+  // All other dimensions use LLM judgment with vision
+  const llmDimensions = ['componentSeparation', 'colorUsage', 'spatialCoverage', 'pixelArtDiscipline', 'promptAdherence'];
 
   const scores = {
-    spatialCoverage: codeScores.spatialCoverage,
-    spatialCoverageReasoning: `Code-based: ${stats.coveragePercent.toFixed(1)}% pixel coverage`,
     detailDensity: codeScores.detailDensity,
     detailDensityReasoning: `Code-based: ${stats.commandCount} drawing commands`,
   };
@@ -337,7 +325,7 @@ async function judgeSprite(prompt, commands, stats, hint, judgeModel, width, hei
       componentSeparation: 0,
       colorUsage: 0,
       detailDensity: codeScores.detailDensity,
-      spatialCoverage: codeScores.spatialCoverage,
+      spatialCoverage: 0,
       pixelArtDiscipline: 0,
       promptAdherence: 0,
       overall: 0,

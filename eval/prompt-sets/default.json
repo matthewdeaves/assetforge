@@ -1,146 +1,288 @@
 {
   "name": "default",
-  "description": "Default test prompt set: 20 prompts across 5 categories (4 per category). All sprites specify viewpoint for consistency.",
+  "description": "Default test prompt set: 30 prompts across 5 categories (6 per category). All sprites specify viewpoint for consistency. Difficulty tiers: simple (32x32), medium (48x48), hard (64x64).",
   "prompts": [
     {
-      "prompt": "top-down military tank with visible tracks, hull, and turret",
+      "prompt": "top-down military tank with visible tracks, hull, and turret with barrel pointing up",
       "width": 64,
       "height": 64,
       "category": "vehicles",
-      "hint": "Should have distinct tracks on each side, a central hull, and a turret with barrel on top"
+      "hint": "Should have distinct tracks on each side, a central hull, and a turret with barrel on top",
+      "difficulty": "hard",
+      "colorHints": "olive green hull, dark grey tracks, darker green turret",
+      "expectedComponents": ["tracks", "hull", "turret", "barrel"]
     },
     {
-      "prompt": "side-view red sports car facing right",
+      "prompt": "side-view red sports car facing right with visible wheels, low profile, and tinted windows",
       "width": 64,
       "height": 32,
       "category": "vehicles",
-      "hint": "Should have wheels, body, windows, and a low sporty profile. Front of car on the right side"
+      "hint": "Should have wheels, body, windows, and a low sporty profile. Front of car on the right side",
+      "difficulty": "medium",
+      "colorHints": "bright red body, dark grey wheels, light blue tinted windows"
     },
     {
-      "prompt": "top-down blue pickup truck facing up",
+      "prompt": "top-down blue pickup truck facing up with cab, open truck bed, and four visible wheels",
+      "width": 48,
+      "height": 48,
+      "category": "vehicles",
+      "hint": "Should have a cab at the top, open truck bed below, four wheels visible, and clear front/back orientation",
+      "difficulty": "medium",
+      "colorHints": "blue body, dark grey wheels, brown truck bed floor",
+      "expectedComponents": ["cab", "truck bed", "wheels"]
+    },
+    {
+      "prompt": "side-view yellow school bus facing left with multiple windows, flat front, and black wheels",
+      "width": 96,
+      "height": 48,
+      "category": "vehicles",
+      "hint": "Should have a long rectangular body, multiple windows in a row, wheels, and a flat front on the left",
+      "difficulty": "hard",
+      "colorHints": "bright yellow body, black wheels and bumpers, light blue windows",
+      "expectedComponents": ["body", "windows", "wheels", "front bumper", "rear bumper"]
+    },
+    {
+      "prompt": "top-down small green go-kart facing right with driver helmet visible",
+      "width": 32,
+      "height": 32,
+      "category": "vehicles",
+      "hint": "Should have a compact body, four small wheels at corners, and a round helmet visible from above",
+      "difficulty": "simple",
+      "colorHints": "green body, black wheels, red helmet"
+    },
+    {
+      "prompt": "side-view wooden sailboat facing right with triangular white sail and brown hull on blue water",
+      "width": 48,
+      "height": 48,
+      "category": "vehicles",
+      "hint": "Should have a curved brown hull sitting on water, a mast, and a triangular white sail",
+      "difficulty": "medium",
+      "colorHints": "brown wooden hull, white sail, blue water line",
+      "expectedComponents": ["hull", "mast", "sail"]
+    },
+    {
+      "prompt": "front-facing pixel art knight holding a sword in one hand and a shield in the other, wearing silver armour",
+      "width": 48,
+      "height": 48,
+      "category": "characters",
+      "hint": "Should have helmet, armor body, humanoid proportions, shield on one side, sword on the other",
+      "difficulty": "medium",
+      "colorHints": "silver armour, grey shield with emblem, metallic sword blade",
+      "expectedComponents": ["helmet", "armour body", "sword", "shield", "legs"]
+    },
+    {
+      "prompt": "front-facing wizard with tall pointed purple hat, flowing blue robes, and holding a glowing staff",
+      "width": 48,
+      "height": 48,
+      "category": "characters",
+      "hint": "Should have a tall pointed hat, robes, humanoid proportions, and a staff with a glowing tip",
+      "difficulty": "medium",
+      "colorHints": "purple hat, blue robes, golden staff with white glow",
+      "expectedComponents": ["pointed hat", "robes", "staff", "glow effect"]
+    },
+    {
+      "prompt": "front-facing skeleton warrior with visible ribcage, skull head, and holding a bone club",
+      "width": 32,
+      "height": 32,
+      "category": "characters",
+      "hint": "Should have a visible ribcage, skull head, bony limbs, and a crude club weapon in one hand",
+      "difficulty": "simple",
+      "colorHints": "off-white bones, dark eye sockets, tan bone club"
+    },
+    {
+      "prompt": "front-facing dwarf blacksmith with thick beard, leather apron, and hammer raised overhead",
+      "width": 48,
+      "height": 48,
+      "category": "characters",
+      "hint": "Should have a stocky proportioned body (wider and shorter), prominent beard, apron, and a large hammer",
+      "difficulty": "medium",
+      "colorHints": "brown beard, dark leather apron, grey hammer head",
+      "expectedComponents": ["beard", "apron", "hammer", "stocky body"]
+    },
+    {
+      "prompt": "front-facing hooded rogue with dark cloak, visible dagger at hip, and glowing eyes under hood",
       "width": 64,
       "height": 64,
-      "category": "vehicles",
-      "hint": "Should have a cab at the top, open truck bed below, four wheels visible, and clear front/back orientation"
+      "category": "characters",
+      "hint": "Should have a hooded figure with most of the face hidden, a dark flowing cloak, and a small dagger visible at the hip",
+      "difficulty": "hard",
+      "colorHints": "dark grey cloak, green glowing eyes, silver dagger",
+      "expectedComponents": ["hood", "cloak", "dagger", "glowing eyes"]
     },
     {
-      "prompt": "side-view yellow school bus facing left",
+      "prompt": "front-facing peasant farmer holding a pitchfork with straw hat and brown overalls",
+      "width": 32,
+      "height": 32,
+      "category": "characters",
+      "hint": "Should have a simple humanoid figure with a straw hat, overalls, and a pitchfork held vertically",
+      "difficulty": "simple",
+      "colorHints": "yellow straw hat, brown overalls, grey pitchfork"
+    },
+    {
+      "prompt": "top-down grass ground tile with subtle texture variation and scattered tiny flowers",
+      "width": 32,
+      "height": 32,
+      "category": "terrain",
+      "hint": "Should tile seamlessly when repeated, use 2-3 shades of green with small detail patches for individual blades",
+      "difficulty": "simple",
+      "colorHints": "2-3 shades of green, tiny yellow or white flower dots"
+    },
+    {
+      "prompt": "top-down water tile with organic curved wave pattern and white foam highlights",
+      "width": 32,
+      "height": 32,
+      "category": "terrain",
+      "hint": "Should use blues and white highlights in curved organic shapes to suggest gentle waves, not straight lines. Must tile when repeated",
+      "difficulty": "simple",
+      "colorHints": "deep blue, medium blue, light blue, white foam highlights"
+    },
+    {
+      "prompt": "top-down sandy desert tile with small scattered rocks and wind-swept ripples",
+      "width": 32,
+      "height": 32,
+      "category": "terrain",
+      "hint": "Should use warm yellows and tans with a few darker speckles for pebbles. Must tile when repeated",
+      "difficulty": "simple",
+      "colorHints": "warm yellow sand, tan variations, dark brown pebbles"
+    },
+    {
+      "prompt": "top-down cobblestone road tile with irregular rounded stones and dark mortar lines",
+      "width": 48,
+      "height": 48,
+      "category": "terrain",
+      "hint": "Should have irregular rounded stone shapes with darker mortar lines between them. Must tile when repeated",
+      "difficulty": "medium",
+      "colorHints": "grey stones with slight colour variation, dark grey mortar"
+    },
+    {
+      "prompt": "top-down snowy ground tile with footprint impressions and ice patches",
+      "width": 48,
+      "height": 48,
+      "category": "terrain",
+      "hint": "Should be mostly white with subtle blue-grey shadows for depth, a few footprint depressions, and slightly shinier ice patches",
+      "difficulty": "medium",
+      "colorHints": "white snow, light blue shadows, pale blue ice patches"
+    },
+    {
+      "prompt": "top-down lava tile with glowing orange cracks on dark rock surface",
+      "width": 48,
+      "height": 48,
+      "category": "terrain",
+      "hint": "Should have a dark rock surface with bright orange-yellow glowing cracks running through it. Must tile when repeated",
+      "difficulty": "medium",
+      "colorHints": "dark grey/black rock, bright orange lava, yellow glow edges"
+    },
+    {
+      "prompt": "wooden crate with metal corner brackets and plank grain texture, angled to show front face and top",
+      "width": 32,
+      "height": 32,
+      "category": "items",
+      "hint": "Should have wood plank texture on the front face, a visible top face for depth, and small metal brackets at corners",
+      "difficulty": "simple",
+      "colorHints": "warm brown wood planks, dark grey metal brackets"
+    },
+    {
+      "prompt": "treasure chest with gold trim, closed lid, and ornate lock, angled to show front face and top",
+      "width": 48,
+      "height": 48,
+      "category": "items",
+      "hint": "Should have a rounded lid, dark wood body, gold lock and trim details, with visible front and top faces",
+      "difficulty": "medium",
+      "colorHints": "dark brown wood, gold trim and lock, brass hinges",
+      "expectedComponents": ["lid", "body", "lock", "trim", "hinges"]
+    },
+    {
+      "prompt": "front-view red health potion in a round glass bottle with a cork stopper",
+      "width": 32,
+      "height": 32,
+      "category": "items",
+      "hint": "Should have a round glass bottle shape with red liquid visible inside, a cork stopper at the top, and a small label",
+      "difficulty": "simple",
+      "colorHints": "red liquid, clear glass highlights, brown cork"
+    },
+    {
+      "prompt": "flat iron key with ornate loop handle, viewed from above, with rust patina",
+      "width": 32,
+      "height": 32,
+      "category": "items",
+      "hint": "Should have a long shaft with teeth at one end and a decorative loop handle at the other, lying flat",
+      "difficulty": "simple",
+      "colorHints": "dark iron grey, orange-brown rust spots"
+    },
+    {
+      "prompt": "open spell book with glowing runes on its pages and leather cover, angled to show pages and spine",
+      "width": 48,
+      "height": 48,
+      "category": "items",
+      "hint": "Should have two open pages with visible glowing symbols, a thick leather cover visible at the spine, and slight depth",
+      "difficulty": "medium",
+      "colorHints": "brown leather cover, cream pages, blue-green glowing runes",
+      "expectedComponents": ["open pages", "leather cover", "glowing runes"]
+    },
+    {
+      "prompt": "front-view golden crown with three gemstones set along the top band",
+      "width": 48,
+      "height": 48,
+      "category": "items",
+      "hint": "Should have a curved gold band with pointed peaks, and three coloured gemstones (centre larger than sides)",
+      "difficulty": "medium",
+      "colorHints": "gold band, red centre gem, blue side gems"
+    },
+    {
+      "prompt": "top-down large grey boulder with cracks, moss patches, and shading for depth",
+      "width": 32,
+      "height": 32,
+      "category": "obstacles",
+      "hint": "Should have an irregular rounded shape with shading to suggest 3D form, visible cracks, and small green moss patches",
+      "difficulty": "simple",
+      "colorHints": "grey stone with light/dark shading, green moss, dark crack lines"
+    },
+    {
+      "prompt": "top-down green leafy tree viewed from above with irregular canopy and visible trunk centre",
+      "width": 32,
+      "height": 32,
+      "category": "obstacles",
+      "hint": "Should have an irregular circular canopy with multiple green shades, not perfectly round, with a small brown trunk visible in the centre",
+      "difficulty": "simple",
+      "colorHints": "dark green, medium green, light green canopy, brown trunk"
+    },
+    {
+      "prompt": "wooden barrel with two metal bands and visible wood stave grain, angled to show front and top",
+      "width": 32,
+      "height": 32,
+      "category": "obstacles",
+      "hint": "Should have a cylindrical shape with curved wood staves, a visible top face, and two horizontal metal bands",
+      "difficulty": "simple",
+      "colorHints": "warm brown wood staves, grey metal bands"
+    },
+    {
+      "prompt": "front-view brick wall segment with alternating brick pattern and mortar lines",
+      "width": 48,
+      "height": 48,
+      "category": "obstacles",
+      "hint": "Should have a clear brick pattern with alternating offset rows, visible mortar lines, and slight colour variation between individual bricks",
+      "difficulty": "medium",
+      "colorHints": "red-brown bricks with slight variation, light grey mortar"
+    },
+    {
+      "prompt": "top-down small red dragon with wings spread wide, viewed from above, with visible tail and horned head",
       "width": 64,
-      "height": 32,
-      "category": "vehicles",
-      "hint": "Should have a long rectangular body, multiple windows in a row, wheels, and a flat front on the left"
+      "height": 64,
+      "category": "creatures",
+      "hint": "Should have a reptilian body in the centre, two spread wings on either side, a tail, and a head with horns or snout",
+      "difficulty": "hard",
+      "colorHints": "red scales, darker red wing membranes, yellow underbelly, orange horn tips",
+      "expectedComponents": ["body", "wings", "tail", "horned head"]
     },
     {
-      "prompt": "front-facing pixel art knight holding a sword in one hand and a shield in the other",
-      "width": 32,
-      "height": 32,
-      "category": "characters",
-      "hint": "Should have helmet, armor body, humanoid proportions, shield on one side, sword on the other"
-    },
-    {
-      "prompt": "front-facing wizard with pointed hat and holding a staff",
-      "width": 32,
-      "height": 32,
-      "category": "characters",
-      "hint": "Should have a tall pointed hat, robes, humanoid proportions, and a staff with a glowing tip"
-    },
-    {
-      "prompt": "front-facing skeleton warrior holding a bone club",
-      "width": 32,
-      "height": 32,
-      "category": "characters",
-      "hint": "Should have a visible ribcage, skull head, bony limbs, and a crude club weapon in one hand"
-    },
-    {
-      "prompt": "top-down small red dragon with wings spread, viewed from above",
-      "width": 32,
-      "height": 32,
-      "category": "characters",
-      "hint": "Should have a reptilian body in the centre, two spread wings on either side, a tail, and a head with horns or snout"
-    },
-    {
-      "prompt": "top-down grass ground tile with subtle texture variation",
-      "width": 32,
-      "height": 32,
-      "category": "terrain",
-      "hint": "Should tile seamlessly when repeated, use 2-3 shades of green with small detail patches for individual blades"
-    },
-    {
-      "prompt": "top-down water tile with organic wave pattern",
-      "width": 32,
-      "height": 32,
-      "category": "terrain",
-      "hint": "Should use blues and white highlights in curved organic shapes to suggest gentle waves, not straight lines. Must tile when repeated"
-    },
-    {
-      "prompt": "top-down sandy desert tile with small scattered rocks",
-      "width": 32,
-      "height": 32,
-      "category": "terrain",
-      "hint": "Should use warm yellows and tans with a few darker speckles for pebbles. Must tile when repeated"
-    },
-    {
-      "prompt": "top-down cobblestone road tile with irregular rounded stones",
-      "width": 32,
-      "height": 32,
-      "category": "terrain",
-      "hint": "Should have irregular rounded stone shapes with darker mortar lines between them. Must tile when repeated"
-    },
-    {
-      "prompt": "three-quarter view wooden crate with metal corner brackets",
-      "width": 32,
-      "height": 32,
-      "category": "items",
-      "hint": "Should have wood plank texture on the front face, a visible top face for depth, and small metal brackets at corners"
-    },
-    {
-      "prompt": "three-quarter view treasure chest with gold trim, lid closed",
-      "width": 32,
-      "height": 32,
-      "category": "items",
-      "hint": "Should have a rounded lid, dark wood body, gold lock and trim details, with visible front and top faces"
-    },
-    {
-      "prompt": "front-view red health potion in a round glass bottle with a cork",
-      "width": 32,
-      "height": 32,
-      "category": "items",
-      "hint": "Should have a round glass bottle shape with red liquid visible inside, a cork stopper at the top, and a small label"
-    },
-    {
-      "prompt": "flat iron key with ornate loop handle, viewed from above",
-      "width": 32,
-      "height": 32,
-      "category": "items",
-      "hint": "Should have a long shaft with teeth at one end and a decorative loop handle at the other, lying flat"
-    },
-    {
-      "prompt": "top-down large grey boulder with cracks and moss patches",
-      "width": 32,
-      "height": 32,
-      "category": "obstacles",
-      "hint": "Should have an irregular rounded shape with shading to suggest 3D form, visible cracks, and small green moss patches"
-    },
-    {
-      "prompt": "top-down green leafy tree viewed from above with visible trunk centre",
-      "width": 32,
-      "height": 32,
-      "category": "obstacles",
-      "hint": "Should have an irregular circular canopy with multiple green shades, not perfectly round, with a small brown trunk visible in the centre"
-    },
-    {
-      "prompt": "three-quarter view wooden barrel with two metal bands",
-      "width": 32,
-      "height": 32,
-      "category": "obstacles",
-      "hint": "Should have a cylindrical shape with curved wood staves, a visible top face, and two horizontal metal bands"
-    },
-    {
-      "prompt": "front-view brick wall segment with alternating brick pattern",
-      "width": 32,
-      "height": 32,
-      "category": "obstacles",
-      "hint": "Should have a clear brick pattern with alternating offset rows, visible mortar lines, and slight colour variation between individual bricks"
+      "prompt": "top-down giant green spider with eight legs spread radially and fangs visible, viewed from above",
+      "width": 48,
+      "height": 48,
+      "category": "creatures",
+      "hint": "Should have a round abdomen, smaller head section, eight legs radiating outward, and small visible fangs",
+      "difficulty": "medium",
+      "colorHints": "dark green body, lighter green leg segments, red fang tips",
+      "expectedComponents": ["abdomen", "head", "eight legs", "fangs"]
     }
   ]
 }

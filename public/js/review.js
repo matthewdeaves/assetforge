@@ -6,7 +6,10 @@
 
 let DIMENSION_RUBRICS = {};
 let DIMENSIONS = [];
-const PIXEL_SCALE = 8;
+
+function getPixelScale(width, height) {
+  return Math.min(8, Math.floor(400 / Math.max(width, height)));
+}
 
 async function fetchRubrics() {
   try {
@@ -38,6 +41,7 @@ let collectedScores = [];   // { index, humanScores } for each graded sprite
 let skippedCount = 0;
 let gradingInProgress = false;
 let regradeMode = false;
+let currentVariantIndex = -1; // -1 = no variants (single-shot)
 
 // ---------------------------------------------------------------------------
 // DOM refs
@@ -97,12 +101,13 @@ async function saveHumanScores(filename, scores) {
 // Rendering
 // ---------------------------------------------------------------------------
 
-function renderSprite(pixels, palette, canvasEl) {
+function renderSprite(pixels, palette, canvasEl, scaleOverride) {
   if (!pixels || !palette) return;
   const height = pixels.length;
   const width = pixels[0].length;
-  canvasEl.width = width * PIXEL_SCALE;
-  canvasEl.height = height * PIXEL_SCALE;
+  const scale = scaleOverride || getPixelScale(width, height);
+  canvasEl.width = width * scale;
+  canvasEl.height = height * scale;
   const c = canvasEl.getContext('2d');
   c.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
@@ -113,7 +118,7 @@ function renderSprite(pixels, palette, canvasEl) {
       const color = palette[idx];
       if (!color) continue;
       c.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-      c.fillRect(x * PIXEL_SCALE, y * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+      c.fillRect(x * scale, y * scale, scale, scale);
     }
   }
 }
@@ -244,21 +249,37 @@ function showSprite(idx) {
   const entry = successResults[idx];
   const result = entry.result;
 
-  renderSprite(result.pixels, result.palette, canvas);
+  // Set up variant selector
+  currentVariantIndex = -1;
+  const variantSelector = document.getElementById('variant-selector');
+  if (variantSelector) variantSelector.remove();
 
-  promptText.textContent = result.prompt.prompt || result.prompt;
-  if (result.prompt.hint) {
-    qualityHint.textContent = `Hint: ${result.prompt.hint}`;
-    qualityHint.style.display = '';
-  } else {
-    qualityHint.style.display = 'none';
+  if (result.variants && result.variants.length > 1) {
+    currentVariantIndex = result.selectedVariantIndex || 0;
+    const selectorDiv = document.createElement('div');
+    selectorDiv.id = 'variant-selector';
+    selectorDiv.style.cssText = 'margin: 8px 0; display: flex; gap: 4px; align-items: center;';
+    const label = document.createElement('span');
+    label.textContent = 'Variant: ';
+    label.style.fontSize = '0.85em';
+    selectorDiv.appendChild(label);
+
+    for (let v = 0; v < result.variants.length; v++) {
+      const btn = document.createElement('button');
+      btn.textContent = v + 1;
+      btn.className = 'review-score-btn' + (v === currentVariantIndex ? ' selected' : '');
+      if (v === (result.selectedVariantIndex || 0)) {
+        btn.title = 'Best variant (auto-selected)';
+        btn.style.fontWeight = 'bold';
+      }
+      btn.addEventListener('click', () => switchVariant(v));
+      selectorDiv.appendChild(btn);
+    }
+
+    canvas.parentNode.insertBefore(selectorDiv, canvas.nextSibling);
   }
 
-  if (result.stats) {
-    statCoverage.textContent = `Coverage: ${result.stats.coveragePercent.toFixed(0)}%`;
-    statCommands.textContent = `Commands: ${result.stats.commandCount}`;
-    statPalette.textContent = `Palette: ${result.stats.paletteUtilization.toFixed(0)}%`;
-  }
+  displayCurrentVariant(result);
 
   progressEl.textContent = `Sprite ${idx + 1} of ${successResults.length}`;
   document.getElementById('sprite-notes').value = '';
@@ -268,6 +289,45 @@ function showSprite(idx) {
   if (regradeMode && result.humanScores) {
     preloadExistingScores(result.humanScores);
   }
+}
+
+function displayCurrentVariant(result) {
+  let data = result;
+  if (result.variants && currentVariantIndex >= 0) {
+    data = result.variants[currentVariantIndex];
+  }
+
+  renderSprite(data.pixels, data.palette, canvas);
+
+  promptText.textContent = result.prompt.prompt || result.prompt;
+  if (result.prompt.hint) {
+    qualityHint.textContent = `Hint: ${result.prompt.hint}`;
+    qualityHint.style.display = '';
+  } else {
+    qualityHint.style.display = 'none';
+  }
+
+  if (data.stats) {
+    statCoverage.textContent = `Coverage: ${data.stats.coveragePercent.toFixed(0)}%`;
+    statCommands.textContent = `Commands: ${data.stats.commandCount}`;
+    statPalette.textContent = `Palette: ${data.stats.paletteUtilization.toFixed(0)}%`;
+  }
+}
+
+function switchVariant(variantIdx) {
+  const entry = successResults[currentIndex];
+  const result = entry.result;
+  currentVariantIndex = variantIdx;
+
+  // Update selector buttons
+  const selectorDiv = document.getElementById('variant-selector');
+  if (selectorDiv) {
+    selectorDiv.querySelectorAll('.review-score-btn').forEach((btn, i) => {
+      btn.classList.toggle('selected', i === variantIdx);
+    });
+  }
+
+  displayCurrentVariant(result);
 }
 
 function nextSprite() {
@@ -283,6 +343,7 @@ function nextSprite() {
   humanScores.overall = Math.round(overall * 10) / 10;
   humanScores.timestamp = new Date().toISOString();
   if (notes) humanScores.notes = notes;
+  if (currentVariantIndex >= 0) humanScores.variantIndex = currentVariantIndex;
   collectedScores.push({
     index: successResults[currentIndex].originalIndex,
     humanScores,
