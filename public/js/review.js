@@ -231,15 +231,12 @@ function nextSprite() {
   // Record scores
   const overall = DIMENSIONS.reduce((sum, d) => sum + spriteScores[d], 0) / DIMENSIONS.length;
   const notes = document.getElementById('sprite-notes').value.trim();
-  const humanScores = {
-    componentSeparation: spriteScores.componentSeparation,
-    colorUsage: spriteScores.colorUsage,
-    detailDensity: spriteScores.detailDensity,
-    spatialCoverage: spriteScores.spatialCoverage,
-    promptAdherence: spriteScores.promptAdherence,
-    overall: Math.round(overall * 10) / 10,
-    timestamp: new Date().toISOString(),
-  };
+  const humanScores = {};
+  for (const d of DIMENSIONS) {
+    humanScores[d] = spriteScores[d];
+  }
+  humanScores.overall = Math.round(overall * 10) / 10;
+  humanScores.timestamp = new Date().toISOString();
   if (notes) humanScores.notes = notes;
   collectedScores.push({
     index: successResults[currentIndex].originalIndex,

@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
-const { DIMENSION_RUBRICS } = require(path.join(__dirname, '..', '..', 'eval', 'judge.js'));
+const { DIMENSION_RUBRICS, DIMENSIONS } = require(path.join(__dirname, '..', '..', 'eval', 'judge.js'));
 
 const RESULTS_DIR = path.join(__dirname, '..', '..', 'eval', 'results');
 
@@ -88,7 +88,7 @@ router.post('/eval/reports/:filename/human-scores', (req, res) => {
     return res.status(400).json({ error: 'scores must be an array' });
   }
 
-  const dimensions = ['componentSeparation', 'colorUsage', 'detailDensity', 'spatialCoverage', 'promptAdherence'];
+  const dimensions = DIMENSIONS;
 
   for (const entry of scores) {
     if (typeof entry.index !== 'number') {
