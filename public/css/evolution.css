@@ -1,0 +1,100 @@
+/* ============================================================
+   SPRITE EVOLUTION — Tracks quality improvement over prompt versions
+   ============================================================ */
+
+/* --- Status banner --- */
+.evo-status-banner {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-xl);
+  font-size: 0.9rem;
+}
+
+.evo-status-banner.waiting {
+  background: var(--status-warning-bg);
+  border: 2px solid var(--status-warning);
+  color: var(--status-warning);
+}
+
+.evo-status-banner.ready {
+  background: var(--status-success-bg);
+  border: 2px solid var(--status-success);
+  color: var(--status-success);
+}
+
+.evo-status-banner h4 {
+  margin-bottom: var(--space-xs);
+}
+
+.evo-status-banner p {
+  margin: 0;
+}
+
+.evo-status-banner code {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+}
+
+/* --- Trends table --- */
+.evo-trends-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: var(--surface-paper);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--space-xl);
+}
+
+.evo-trends-table th,
+.evo-trends-table td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.evo-trends-table th {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--surface-warm);
+}
+
+.evo-trends-table .improved {
+  color: var(--status-success);
+  font-weight: 600;
+}
+
+.evo-trends-table .worsened {
+  color: var(--status-error);
+  font-weight: 600;
+}
+
+.evo-trends-table .overall-row {
+  font-weight: 700;
+  background: var(--surface-warm);
+}
+
+/* --- Version label --- */
+.evo-version-tag {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-on-accent);
+  background: var(--accent-orange);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.evo-version-tag.baseline {
+  background: var(--accent-teal);
+}

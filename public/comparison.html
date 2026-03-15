@@ -32,9 +32,9 @@
 
   <main class="app-content">
     <div class="section-header">
-      <h2 class="section-title">Sprite Evolution Across Rounds</h2>
+      <h2 class="section-title">Judge Calibration History</h2>
     </div>
-    <p class="comp-intro">Each row shows the same prompt generated across different eval rounds. Sprites differ between rounds because the LLM generates fresh output each time. Human scores were collected blind (LLM scores hidden). The goal: calibrate the judge until LLM and human scores converge.</p>
+    <p class="comp-intro">This page tracks <strong>judge calibration</strong> — not sprite improvement. The generation prompt is the same across all rounds. Sprites differ because the LLM generates fresh output each time, but the instructions haven't changed. What <em>has</em> changed is the judge: rubric wording, judge model, and scoring criteria. Human scores were collected blind (LLM scores hidden). The goal: get the judge's scores to converge with human scores so we can trust it to measure sprite quality automatically.</p>
 
     <div id="legend" class="comp-legend">
       <span><strong>H:</strong> Human score</span>
@@ -46,8 +46,9 @@
 
     <div id="calibration-evolution" class="comp-calibration-section">
       <div class="section-header mt-lg">
-        <h3 class="section-title">Judge Calibration Over Time</h3>
+        <h3 class="section-title">Calibration Metrics Over Time</h3>
       </div>
+      <p class="comp-intro">MAD (Mean Absolute Difference) should trend toward 0. Agreement rate should trend toward 100%. When all dimensions are below 1.0 MAD and above 80% agreement, the judge is calibrated and ready to use for generator prompt iteration.</p>
       <div id="calibration-table-container"></div>
     </div>
   </main>

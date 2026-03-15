@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprite Evolution — Asset Forge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/comparison.css">
+  <link rel="stylesheet" href="css/evolution.css">
+</head>
+<body>
+
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <div class="top-bar-left">
+        <a href="/" class="logo" title="Return to Asset Forge">
+          <span class="logo-icon">&#9881;</span>
+          <span class="logo-text">Asset Forge</span>
+        </a>
+        <nav class="breadcrumb">
+          <span class="breadcrumb-item breadcrumb-home">Home</span>
+          <span class="breadcrumb-item breadcrumb-current">Sprite Evolution</span>
+        </nav>
+      </div>
+      <div class="top-bar-right">
+        <a href="/comparison.html" class="btn btn-small btn-outline">Calibration</a>
+        <a href="/review.html" class="btn btn-small btn-outline">Sprite Review</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-content">
+    <div class="section-header">
+      <h2 class="section-title">Sprite Quality Evolution</h2>
+    </div>
+    <p class="comp-intro">This page tracks how <strong>sprite quality improves</strong> as we iterate on the generation system prompt. Each column is a different version of the prompt instructions given to the LLM that creates the sprites. The judge (calibrated separately via <a href="/comparison.html">the calibration page</a>) scores each version automatically. Better prompts should produce higher scores across the board.</p>
+
+    <div id="evo-status" class="evo-status-banner"></div>
+
+    <div class="section-header mt-lg">
+      <h3 class="section-title">Score Trends by Prompt Version</h3>
+    </div>
+    <div id="evo-trends-container"></div>
+
+    <div class="section-header mt-lg">
+      <h3 class="section-title">Side-by-Side Sprites</h3>
+    </div>
+    <p class="comp-intro">Same prompt, different generator versions. Visual improvement should be apparent as prompt versions increase.</p>
+    <div id="evo-sprites-container"></div>
+  </main>
+
+  <script src="/js/evolution.js"></script>
+</body>
+</html>
