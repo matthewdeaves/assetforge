@@ -1,6 +1,6 @@
 # tanks Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-14
+Auto-generated from all feature plans. Last updated: 2026-03-15
 
 ## Active Technologies
 - File system — JSON files in per-project directories (001-asset-forge-service)
@@ -28,8 +28,8 @@ Node.js 20 LTS (server), plain HTML/CSS/JS (frontend): Follow standard conventio
 
 ## Recent Changes
 - 003-human-grading-ui: Added Node.js 20 LTS (same as Asset Forge server) + Plain HTML/CSS/JS (frontend) + Existing Express server (`server/index.js`), existing eval harness (`eval/`)
+- 003-human-grading-ui: Added Node.js 20 LTS (same as Asset Forge server) + Plain HTML/CSS/JS (frontend) + Existing Express server (`server/index.js`), existing eval harness (`eval/`)
 - 002-sprite-eval-harness: Added Node.js 20 LTS (same as Asset Forge server) + Existing `server/services/rasterizer.js` and `server/services/llm.js` from Asset Forge
-- 001-asset-forge-service: Added Node.js 20 LTS (server), plain HTML/CSS/JS (frontend) + OpenRouter SDK (LLM), Express (HTTP server)
 
 
 <!-- MANUAL ADDITIONS START -->

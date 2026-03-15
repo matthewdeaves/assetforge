@@ -16,18 +16,29 @@ scope.
 
 ## Core Principles
 
-### I. LLM-Powered Grid Sprite Generation
+### I. LLM-Powered Sprite Generation via Drawing Commands
 
-The LLM MUST generate sprites as **palette-indexed 2D pixel grids**
-— arrays of integer color indices.
+The LLM MUST generate sprites as **structured drawing commands**
+— a list of shape primitives (rectangles, circles, ellipses,
+lines, polygons, fills) each referencing palette index colors.
+The server **rasterizes** these commands into a palette-indexed
+2D pixel grid.
+
+This approach was chosen after testing showed that asking the LLM
+to output raw pixel arrays (thousands of individual integers)
+produces low-quality, incoherent sprites. LLMs excel at spatial
+reasoning about shapes and composition but struggle with
+individual pixel values. Drawing commands produce output quality
+comparable to hand-crafted pixel art (as demonstrated by the
+procedural sprites in the reference HTML files).
 
 - All LLM calls go through the **OpenRouter SDK**.
 - The prompt includes the project's palette definition and target
-  dimensions so the LLM outputs valid grid data.
-- **Palette**: projects use a palette compatible with the **Mac OS
-  System 7+ standard system palette** (up to 256 colors). The
-  palette is defined per project and included in LLM prompts by
-  default. When a user explicitly opts for **free-color mode**,
+  dimensions so the LLM outputs valid drawing commands.
+- **Palette**: projects use a palette of up to **256 user/LLM-defined
+  RGB colors** compatible with PICT 2.0 indexed color export (4-bit
+  for ≤16 colors, 8-bit for 17-256). The palette is defined per
+  project and included in LLM prompts by default. When a user explicitly opts for **free-color mode**,
   the project palette is omitted and the LLM chooses its own
   colors; the resulting palette is stored with the sprite.
   Palette index 0 is reserved as the **transparent color**.
@@ -37,15 +48,20 @@ The LLM MUST generate sprites as **palette-indexed 2D pixel grids**
   - Obstacles, scenery, barriers
   - Maps/backgrounds (larger sprites or tiles meant to repeat)
 - The LLM does NOT generate raster images. It generates structured
-  pixel data that the browser renders using the grid system.
+  drawing commands that the server rasterizes into pixel grids,
+  which the browser renders using the grid system.
+- **Drawing commands** are executed in order (later commands draw
+  over earlier ones), enabling layered composition. Both the
+  commands and the rasterized pixel grid are stored per sprite.
 - Keep LLM interaction simple: tell the LLM the grid size and what
-  to draw. Do NOT over-engineer output validation — a clear prompt
-  with palette and dimensions is sufficient.
+  to draw using shape primitives. Do NOT over-engineer output
+  validation — a clear prompt with palette, dimensions, and
+  available commands is sufficient.
 - **Iteration workflow**: users start with zero sprites and build
   up a library through prompting. A user can select an existing
   sprite as a **starting point** for a new prompt — the existing
-  sprite's grid data is included in the LLM prompt so the LLM can
-  produce a variation (e.g., recolor, next animation frame,
+  sprite's drawing commands are included in the LLM prompt so the
+  LLM can produce a variation (e.g., recolor, next animation frame,
   alternate pose). Each prompt always produces a **new** sprite;
   originals are never overwritten. Directional variants (rotation)
   are handled by the game program at runtime, not by generating
@@ -67,7 +83,7 @@ using this scaled grid rendering:
 
 - **CSS grid or canvas rendering** where each palette index maps to
   a colored cell at adjustable scale (2-8px per cell = per pixel).
-- **Grid overlay toggle** with major lines every 8 pixels.
+- **Grid overlay toggle** showing pixel boundary lines when zoomed in.
 - The preview is a scaled-up view of the real data — what you see
   in the grid at 32 cells wide IS a 32-pixel-wide sprite.
 - Assets MUST be saveable to the project (persisted to disk) from
@@ -183,7 +199,8 @@ variable.
 
 ### Sprite JSON Format (internal)
 
-Sprites are stored internally as JSON:
+Sprites are stored internally as JSON with both drawing commands
+(source of truth) and rasterized pixels (for rendering/export):
 ```json
 {
   "width": 64,
@@ -191,6 +208,12 @@ Sprites are stored internally as JSON:
   "palette": [
     { "r": 0, "g": 0, "b": 0 },
     { "r": 255, "g": 68, "b": 68 },
+    ...
+  ],
+  "commands": [
+    { "type": "rect", "x": 10, "y": 5, "w": 20, "h": 30, "color": 3 },
+    { "type": "circle", "cx": 32, "cy": 32, "r": 12, "color": 5 },
+    { "type": "ellipse", "cx": 32, "cy": 32, "rx": 16, "ry": 10, "color": 2 },
     ...
   ],
   "pixels": [
@@ -201,18 +224,20 @@ Sprites are stored internally as JSON:
 }
 ```
 
-This is the format the LLM outputs, the browser previews, and
-`grid2pict` consumes. Palette index 0 = transparent.
+The LLM outputs the `commands` array. The server rasterizes
+commands into the `pixels` array. `grid2pict` consumes the
+`pixels` array for PICT export. Palette index 0 = transparent.
 
 ### Pipeline Detail
 
 1. User prompts: "draw a top-down crate, 32x32" (from scratch)
    — OR selects an existing sprite and prompts: "make it blue"
-   (iteration — existing grid data sent to LLM as context)
+   (iteration — existing drawing commands sent to LLM as context)
 2. Service sends prompt + palette + dimensions (+ existing sprite
-   data if iterating) to OpenRouter
-3. LLM returns 2D array of palette indices → new sprite created
-4. Browser renders grid preview (CSS grid or canvas)
+   drawing commands if iterating) to OpenRouter
+3. LLM returns drawing commands (shape primitives with palette
+   indices) → server rasterizes into pixel grid → new sprite created
+4. Browser renders grid preview (canvas)
 5. User reviews, adjusts scale, checks with grid overlay
 6. User saves sprite to project (original unchanged if iterating)
 7. On single export: `grid2pict` converts JSON → PICT 2.0,
@@ -262,4 +287,4 @@ All specs and plans MUST pass a constitution check. Amendments need:
    PATCH for clarifications)
 3. Template updates if principle names or rules change
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-14
+**Version**: 2.0.1 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-14 (PATCH: Principle I palette wording clarified — user/LLM-defined colors, not constrained to System 7 standard palette)

@@ -131,7 +131,7 @@ Response 200:
 ]
 ```
 
-Note: Pixel data is NOT included in list responses (too large). Use Get Sprite for full data.
+Note: Neither pixel data nor drawing commands are included in list responses (too large). Use Get Sprite for full data.
 
 ### Get Sprite
 
@@ -147,6 +147,11 @@ Response 200:
   "prompt": "draw a top-down yellow tank with a big gun",
   "parentId": null,
   "createdAt": "2026-03-14T12:05:00Z",
+  "commands": [
+    { "type": "rect", "x": 2, "y": 8, "w": 18, "h": 54, "color": 13 },
+    { "type": "circle", "cx": 32, "cy": 32, "r": 12, "color": 5 },
+    ...
+  ],
   "pixels": [[0, 0, 1, ...], ...],
   "palette": [{ "r": 0, "g": 0, "b": 0 }, ...]
 }
@@ -168,6 +173,11 @@ Content-Type: application/json
 
 Response 200:
 {
+  "commands": [
+    { "type": "rect", "x": 2, "y": 8, "w": 18, "h": 54, "color": 13 },
+    { "type": "circle", "cx": 32, "cy": 32, "r": 12, "color": 5 },
+    ...
+  ],
   "pixels": [[0, 0, 1, ...], ...],
   "width": 64,
   "height": 64,
@@ -177,9 +187,9 @@ Response 200:
 }
 ```
 
-Note: This returns the generated sprite data for preview but does NOT save it. The client must call Save Sprite to persist.
+Note: The LLM returns drawing commands. The server rasterizes them into the pixels array. This returns the generated sprite data for preview but does NOT save it. The client must call Save Sprite to persist.
 
-If `parentId` is provided, the parent sprite's pixel data is included in the LLM prompt as context for iteration.
+If `parentId` is provided, the parent sprite's drawing commands are included in the LLM prompt as context for iteration.
 
 If `useProjectPalette` is false (default true), the LLM chooses colors freely and the response includes the LLM-chosen palette. The sprite stores this palette independently of the project palette.
 
@@ -195,6 +205,7 @@ Content-Type: application/json
   "height": 64,
   "prompt": "draw a top-down yellow tank with a big gun",
   "parentId": null,
+  "commands": [...],
   "pixels": [[0, 0, 1, ...], ...],
   "palette": [{ "r": 0, "g": 0, "b": 0 }, ...]
 }
@@ -235,7 +246,7 @@ Content-Disposition: attachment; filename="YellowTank.bin"
 (MacBinary file body)
 ```
 
-The server writes sprite JSON to a temp file, shells out to `grid2pict` (JSON → PICT 2.0), then `pict2macbin` (PICT → MacBinary with type `PICT` / creator `ttxt`), streams the result, and cleans up temp files.
+The server writes sprite JSON (pixels + palette) to a temp file, shells out to `grid2pict` (JSON → PICT 2.0), then `pict2macbin` (PICT → MacBinary with type `PICT` / creator `ttxt`), streams the result, and cleans up temp files.
 
 ### Export All Sprites as HFS Disk Image
 
@@ -265,5 +276,5 @@ All errors return:
 |--------|---------|
 | 400 | Bad request (missing fields, invalid dimensions) |
 | 404 | Project or sprite not found |
-| 500 | Server error (LLM failure, export failure) |
+| 500 | Server error (LLM failure, rasterization failure, export failure) |
 | 502 | OpenRouter API unavailable |

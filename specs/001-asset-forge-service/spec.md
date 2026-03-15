@@ -2,7 +2,8 @@
 
 **Feature Branch**: `001-asset-forge-service`
 **Created**: 2026-03-14
-**Status**: Draft
+**Status**: Draft (Revised)
+**Revised**: 2026-03-14
 **Input**: User description: "Web service for generating classic Macintosh game assets using an LLM. Users create projects, generate sprites via prompts with grid sizes, preview in scaled browser viewport, iterate on existing sprites, and export as PICT 2.0 MacBinary files."
 
 ## User Scenarios & Testing *(mandatory)*
@@ -25,7 +26,9 @@ A user opens the Asset Forge in their browser and creates a new project. They gi
 
 ### User Story 2 - Generate a Sprite from a Prompt (Priority: P1)
 
-A user has a project selected. They type a prompt like "draw a top-down yellow tank with a big gun" and choose a grid size (e.g., 64x64). They click generate. The service sends the prompt, palette, and dimensions to the LLM via OpenRouter. The LLM returns a 2D array of palette indices. The browser renders the result as a scaled-up pixel grid where each cell represents one real pixel. The user can see the sprite at different zoom levels and toggle a grid overlay. If they like it, they save it to the project.
+A user has a project selected. They type a prompt like "draw a top-down yellow tank with a big gun" and choose a grid size (e.g., 64x64). They click generate. The service sends the prompt, palette, and dimensions to the LLM via OpenRouter. The LLM returns a structured list of drawing commands — shape primitives like rectangles, circles, ellipses, lines, and polygon fills, each referencing palette indices. The server executes these drawing commands through a rasterizer to produce the final pixel grid. The browser renders the result as a scaled-up pixel grid where each cell represents one real pixel. The user can see the sprite at different zoom levels and toggle a grid overlay. If they like it, they save it to the project.
+
+This approach produces dramatically better sprites than asking the LLM to output raw pixel arrays. LLMs excel at spatial reasoning about shapes, composition, and layered drawing operations, but struggle to output thousands of individual pixel values coherently. By having the LLM describe the sprite as geometric primitives (the same approach used to create the original reference tank sprites procedurally), the output quality is comparable to hand-crafted pixel art.
 
 **Why this priority**: This is the core value proposition — going from a text description to a visible pixel-art sprite. Without this, the service has no purpose.
 
@@ -35,9 +38,10 @@ A user has a project selected. They type a prompt like "draw a top-down yellow t
 
 1. **Given** a project is selected, **When** the user enters a prompt and grid size and clicks generate, **Then** a sprite preview appears in the scaled grid viewport
 2. **Given** a sprite preview is shown, **When** the user adjusts the zoom scale, **Then** the grid cells resize and the sprite remains sharp (no interpolation — each cell is a solid color block)
-3. **Given** a sprite preview is shown, **When** the user toggles the grid overlay, **Then** grid lines appear every 8 pixels for alignment reference
-4. **Given** a sprite preview is shown, **When** the user clicks save, **Then** the sprite is added to the project's asset library with its prompt and dimensions recorded
-5. **Given** the LLM returns data, **When** the response is not a valid pixel grid, **Then** the user sees a clear error message and can retry
+3. **Given** a sprite preview is shown, **When** the user toggles the grid overlay, **Then** grid lines appear at pixel boundaries showing individual pixel cells
+4. **Given** a sprite preview is shown, **When** the user clicks save, **Then** the sprite is added to the project's asset library with its prompt, drawing commands, and rasterized pixels recorded
+5. **Given** the LLM returns data, **When** the response contains invalid or malformed drawing commands, **Then** the user sees a clear error message and can retry
+6. **Given** the LLM returns drawing commands, **When** the server rasterizes them, **Then** the resulting pixel grid exactly matches the specified dimensions and all palette indices are valid
 
 ---
 
@@ -67,7 +71,7 @@ A user has a yellow tank sprite they like. They select it and choose "Create var
 
 **Acceptance Scenarios**:
 
-1. **Given** a saved sprite is selected, **When** the user chooses "Create variation" and enters a new prompt, **Then** the LLM receives both the existing sprite data and the new prompt
+1. **Given** a saved sprite is selected, **When** the user chooses "Create variation" and enters a new prompt, **Then** the LLM receives both the existing sprite's drawing commands and the new prompt
 2. **Given** a variation is generated, **When** it appears in preview, **Then** the original sprite is unchanged in the library
 3. **Given** a variation is generated, **When** the user saves it, **Then** both the original and the variation exist as separate sprites in the library
 4. **Given** a variation is being created, **When** the user views the preview, **Then** they can see the original sprite alongside the new variation for comparison
@@ -96,10 +100,12 @@ A user has built up a collection of sprites and wants to transfer them to a clas
 
 ### Edge Cases
 
-- What happens when the LLM returns a grid with wrong dimensions? The service shows an error and the user can retry with the same prompt.
-- What happens when the LLM returns palette indices outside the palette range? Out-of-range indices are clamped to 0 (transparent).
+- What happens when the LLM returns invalid drawing commands? The rasterizer skips malformed commands and renders what it can. The user sees a warning and can retry.
+- What happens when drawing commands reference palette indices outside the palette range? Out-of-range indices are clamped to 0 (transparent).
+- What happens when drawing commands place shapes outside the grid bounds? The rasterizer clips to the grid dimensions — only pixels within bounds are drawn.
 - What happens when the OpenRouter API is unavailable? The user sees a clear connection error and can retry.
 - What happens when a project has no sprites and the user tries to export? The export option is disabled or hidden.
+- What happens when the LLM returns a mix of valid and invalid commands? Valid commands are executed; invalid ones are skipped with a warning count shown to the user.
 
 ## Requirements *(mandatory)*
 
@@ -107,16 +113,18 @@ A user has built up a collection of sprites and wants to transfer them to a clas
 
 - **FR-001**: System MUST allow users to create named projects with a text description (e.g., "a top-down tank battle game with desert and jungle themes"). The LLM generates an initial 16-color palette from the description. Each project has its own palette and asset library
 - **FR-002**: System MUST allow users to enter a text prompt and select a grid size (width x height in pixels) to generate a sprite
-- **FR-003**: System MUST send the prompt, project palette, and target dimensions to an LLM via OpenRouter and receive a 2D array of palette indices. Only Anthropic models are supported (Opus, Sonnet, Haiku — latest versions). The model is configurable via `OPENROUTER_MODEL` environment variable, defaulting to the latest Anthropic Sonnet.
-- **FR-004**: System MUST render the generated sprite in a scaled grid viewport where each palette index maps to a colored cell, with adjustable zoom (2-8px per cell)
-- **FR-005**: System MUST provide a grid overlay toggle showing lines every 8 pixels
+- **FR-003**: System MUST send the prompt, project palette, and target dimensions to an LLM via OpenRouter and receive structured drawing commands — a list of shape primitives (rectangles, circles, ellipses, lines, polygons, fill operations) each referencing palette indices. The server MUST include a rasterizer that executes these drawing commands onto a pixel grid of the requested dimensions. Only Anthropic models are supported (Opus, Sonnet, Haiku). The model is configurable via `OPENROUTER_MODEL` environment variable, defaulting to `anthropic/claude-sonnet-4-6` (resolved by OpenRouter)
+- **FR-003a**: System MUST store both the drawing commands and the rasterized pixel grid for each sprite. The drawing commands are the source of truth — the pixel grid can be regenerated from them. When iterating on an existing sprite, the LLM receives the original drawing commands (not raw pixels) so it can reason about the sprite's structure
+- **FR-004**: System MUST render the generated sprite in a scaled grid viewport where each palette index maps to a colored cell, with adjustable zoom (2-8px per cell). The frontend MUST have a distinctive, polished visual design with intentional aesthetic choices — not generic default styling
+- **FR-004a**: System MUST provide a clear, user-friendly navigation system with a persistent menu that lets users move between project list, workspace views (generate, library, palette), and export without confusion. Navigation should feel intuitive for first-time users and visually integrate with the overall design aesthetic
+- **FR-005**: System MUST provide a grid overlay toggle that shows lines at pixel boundaries when zoomed in, helping users see individual pixel cells
 - **FR-006**: System MUST allow users to save generated sprites to the project's asset library with the generating prompt recorded
 - **FR-007**: System MUST allow users to select an existing sprite as a starting point and provide a new prompt to generate a variation, producing a new sprite without modifying the original
 - **FR-008**: System MUST allow users to browse all saved sprites in a project, view them in the grid viewport, and see the prompt that created each one
 - **FR-009**: System MUST allow users to delete sprites from the asset library
 - **FR-010**: System MUST export individual sprites as PICT 2.0 files wrapped in MacBinary format (type `PICT`, creator `ttxt`) by shelling out to C tools: `grid2pict` (JSON → PICT 2.0) then `pict2macbin` (PICT → MacBinary)
 - **FR-011**: System MUST export all sprites in a project as an HFS disk image (.dsk) containing every sprite as a native PICT file (type `PICT`, creator `ttxt`) in a project-named folder, by shelling out to `picts2dsk` (PICT files → HFS disk image). The tool uses libhfs (bundled from Retro68) to create the disk image and sets HFS file type/creator directly
-- **FR-012**: System MUST support palettes of up to 256 colors compatible with Mac OS System 7+ standard system palette, with palette index 0 reserved as transparent
+- **FR-012**: System MUST support palettes of up to 256 RGB colors in indexed color format (4-bit for ≤16 colors, 8-bit for 17-256 colors), with palette index 0 reserved as transparent. Palettes are user/LLM-defined colors — they do not need to match the Mac OS System 7 standard system palette, but must be compatible with PICT 2.0 indexed color export
 - **FR-013**: System MUST allow users to generate a project palette from a text prompt via the LLM (e.g., "military desert colors") and manually adjust individual colors using a color picker
 - **FR-014**: System MUST use the project's palette when generating sprites by default. When the user opts out (e.g., a "use free colors" toggle), the LLM generates the sprite with any colors it deems relevant to the prompt, and the resulting palette is stored with the sprite
 - **FR-015**: System MUST persist projects and sprites to the file system (no database)
@@ -125,7 +133,7 @@ A user has built up a collection of sprites and wants to transfer them to a clas
 ### Key Entities
 
 - **Project**: A named workspace containing a color palette and a collection of assets. Stored as a directory on disk with a manifest file.
-- **Sprite**: A palette-indexed 2D pixel grid with associated metadata (name, dimensions, generating prompt, creation date, parent sprite ID if iterated from another). Stored as JSON.
+- **Sprite**: A palette-indexed 2D pixel grid with its generating drawing commands and associated metadata (name, dimensions, generating prompt, creation date, parent sprite ID if iterated from another). The drawing commands are the structured list of shape primitives the LLM produced; the pixel grid is the rasterized result. Both are stored as JSON.
 - **Palette**: An ordered list of up to 256 RGB colors defined per project. Index 0 is always transparent.
 
 ## Clarifications
@@ -133,6 +141,9 @@ A user has built up a collection of sprites and wants to transfer them to a clas
 ### Session 2026-03-14
 
 - Q: How should LLM model selection work? → A: Configurable via environment variable with sensible default. Only Anthropic models supported: latest Opus, Sonnet, and Haiku.
+- Q: Why not have the LLM return raw pixel arrays? → A: Tested and rejected. Asking an LLM to output thousands of individual integer values produces low-quality, incoherent sprites. The LLM is much better at reasoning about shapes and composition through drawing commands (rectangles, circles, ellipses, etc.), which is exactly how the original reference sprites in archive/game-assets.html were built procedurally. The drawing-commands approach produces output quality comparable to hand-crafted pixel art.
+- Q: What drawing command types should be supported? → A: At minimum: rect (filled rectangle), circle (filled circle), ellipse (filled ellipse), line, and polygon. Each command specifies coordinates, dimensions/radius, and a palette index for the fill color. Commands are executed in order (later commands draw over earlier ones), enabling layered composition.
+- Q: Should the frontend have a specific visual style? → A: Yes. The frontend must have distinctive, production-grade visual design with intentional aesthetic choices. Generic AI-generated aesthetics (default fonts, bland color schemes, cookie-cutter layouts) are explicitly rejected. The design should feel crafted and memorable.
 
 ## Success Criteria *(mandatory)*
 
@@ -144,3 +155,5 @@ A user has built up a collection of sprites and wants to transfer them to a clas
 - **SC-004**: The grid preview accurately represents the final exported image — every cell in the preview corresponds exactly to one pixel in the PICT output
 - **SC-005**: The service starts with a single `docker compose up` command and is usable within 30 seconds of container startup
 - **SC-006**: Sprite generation, iteration, and export all work the same way regardless of asset type (character, tile, map, projectile, obstacle — no special-case workflows)
+- **SC-007**: Generated sprites at 64x64 resolution have clearly recognizable shapes, distinct features, and coherent use of color — comparable in quality to sprites built from hand-placed geometric primitives, not random noise or blurred blobs
+- **SC-008**: The frontend interface has a distinctive, polished visual identity that feels intentionally designed — not generic or template-like
