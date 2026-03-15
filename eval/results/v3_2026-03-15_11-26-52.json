@@ -4837,7 +4837,18 @@
       },
       "generationTimeMs": 18236,
       "judgingTimeMs": 19422,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 2,
+        "colorUsage": 2,
+        "detailDensity": 2,
+        "spatialCoverage": 3,
+        "pixelArtDiscipline": 3,
+        "promptAdherence": 2,
+        "overall": 2.3,
+        "timestamp": "2026-03-15T11:44:59.165Z",
+        "notes": "Not enough contrast. Retro Sprites are meant to have high contrast to help define what they are depicting."
+      }
     },
     {
       "prompt": {
@@ -7562,7 +7573,18 @@
       },
       "generationTimeMs": 18938,
       "judgingTimeMs": 18842,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 5,
+        "detailDensity": 4,
+        "spatialCoverage": 5,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 4,
+        "overall": 4.3,
+        "timestamp": "2026-03-15T11:45:35.289Z",
+        "notes": "Just the windows need to be a better fit for the body of the car"
+      }
     },
     {
       "prompt": {
@@ -12421,7 +12443,18 @@
       },
       "generationTimeMs": 20029,
       "judgingTimeMs": 23444,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 3,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 3,
+        "promptAdherence": 3,
+        "overall": 3.5,
+        "timestamp": "2026-03-15T11:47:01.590Z",
+        "notes": "Better that its not just a square but still nowhere near as good as the micromachine style from megadrive games where there was a proper outline shape to the vehicles. youd expect to see a line pattern on the truck bed, a more rounded and wider cab at the front, bigger lights and just two of them at the front."
+      }
     },
     {
       "prompt": {
@@ -15179,7 +15212,18 @@
       },
       "generationTimeMs": 20319,
       "judgingTimeMs": 19508,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 5,
+        "detailDensity": 4,
+        "spatialCoverage": 5,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 4,
+        "overall": 4.3,
+        "timestamp": "2026-03-15T11:47:44.699Z",
+        "notes": "the yellow is bleeding out under the bus shape though"
+      }
     },
     {
       "prompt": {
@@ -16840,7 +16884,18 @@
       },
       "generationTimeMs": 17665,
       "judgingTimeMs": 20990,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 5,
+        "detailDensity": 4,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 5,
+        "promptAdherence": 4,
+        "overall": 4.3,
+        "timestamp": "2026-03-15T11:48:18.742Z",
+        "notes": "the face looks bad though - eyes too big, mouth just a line in the wrong colour"
+      }
     },
     {
       "prompt": {
@@ -18513,7 +18568,18 @@
       },
       "generationTimeMs": 18659,
       "judgingTimeMs": 19435,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 5,
+        "detailDensity": 3,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 4,
+        "overall": 4,
+        "timestamp": "2026-03-15T11:49:06.099Z",
+        "notes": "has no legs, is more like an icon and the face has some strange lines on it."
+      }
     },
     {
       "prompt": {
@@ -20158,7 +20224,18 @@
       },
       "generationTimeMs": 17919,
       "judgingTimeMs": 20584,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 3,
+        "colorUsage": 3,
+        "detailDensity": 2,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 3,
+        "promptAdherence": 3,
+        "overall": 3,
+        "timestamp": "2026-03-15T11:49:30.689Z",
+        "notes": "too minimal"
+      }
     },
     {
       "prompt": {
@@ -22009,7 +22086,18 @@
       },
       "generationTimeMs": 21503,
       "judgingTimeMs": 21811,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 3,
+        "colorUsage": 4,
+        "detailDensity": 2,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 3,
+        "overall": 3.3,
+        "timestamp": "2026-03-15T11:49:58.142Z",
+        "notes": "still not looking dragon shaped"
+      }
     },
     {
       "prompt": {
@@ -23691,7 +23779,17 @@
       },
       "generationTimeMs": 18022,
       "judgingTimeMs": 16680,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 5,
+        "colorUsage": 4,
+        "detailDensity": 4,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 4,
+        "overall": 4.2,
+        "timestamp": "2026-03-15T11:50:06.414Z"
+      }
     },
     {
       "prompt": {
@@ -25328,7 +25426,17 @@
       },
       "generationTimeMs": 16907,
       "judgingTimeMs": 16518,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 4,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 4,
+        "overall": 4,
+        "timestamp": "2026-03-15T11:50:14.111Z"
+      }
     },
     {
       "prompt": {
@@ -26978,7 +27086,18 @@
       },
       "generationTimeMs": 17581,
       "judgingTimeMs": 15157,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 3,
+        "colorUsage": 4,
+        "detailDensity": 3,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 3,
+        "promptAdherence": 3,
+        "overall": 3.3,
+        "timestamp": "2026-03-15T11:50:48.374Z",
+        "notes": "the grid lines do not help"
+      }
     },
     {
       "prompt": {
@@ -28615,7 +28734,17 @@
       },
       "generationTimeMs": 16385,
       "judgingTimeMs": 16184,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 4,
+        "spatialCoverage": 5,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 4,
+        "overall": 4.2,
+        "timestamp": "2026-03-15T11:51:04.051Z"
+      }
     },
     {
       "prompt": {
@@ -30386,7 +30515,18 @@
       },
       "generationTimeMs": 19545,
       "judgingTimeMs": 20283,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 4,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 3,
+        "overall": 3.8,
+        "timestamp": "2026-03-15T11:51:31.505Z",
+        "notes": "a weird top to it"
+      }
     },
     {
       "prompt": {
@@ -31986,7 +32126,17 @@
       },
       "generationTimeMs": 16589,
       "judgingTimeMs": 20357,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 2,
+        "colorUsage": 4,
+        "detailDensity": 3,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 3,
+        "promptAdherence": 2,
+        "overall": 3,
+        "timestamp": "2026-03-15T11:51:49.889Z"
+      }
     },
     {
       "prompt": {
@@ -33593,7 +33743,18 @@
       },
       "generationTimeMs": 18047,
       "judgingTimeMs": 37549,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 2,
+        "colorUsage": 4,
+        "detailDensity": 3,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 3,
+        "promptAdherence": 3,
+        "overall": 3.2,
+        "timestamp": "2026-03-15T11:52:25.017Z",
+        "notes": "some weird dark lines drawn over it, not really bottle shaped like i would expect"
+      }
     },
     {
       "prompt": {
@@ -35145,7 +35306,18 @@
       },
       "generationTimeMs": 14466,
       "judgingTimeMs": 35738,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 3,
+        "detailDensity": 3,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 3,
+        "promptAdherence": 2,
+        "overall": 3.2,
+        "timestamp": "2026-03-15T11:52:46.834Z",
+        "notes": "not really key looking"
+      }
     },
     {
       "prompt": {
@@ -36734,7 +36906,17 @@
       },
       "generationTimeMs": 16151,
       "judgingTimeMs": 19131,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 4,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 5,
+        "promptAdherence": 5,
+        "overall": 4.3,
+        "timestamp": "2026-03-15T11:53:02.154Z"
+      }
     },
     {
       "prompt": {
@@ -38282,7 +38464,17 @@
       },
       "generationTimeMs": 14462,
       "judgingTimeMs": 31048,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 4,
+        "spatialCoverage": 4,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 5,
+        "overall": 4.2,
+        "timestamp": "2026-03-15T11:53:11.285Z"
+      }
     },
     {
       "prompt": {
@@ -39874,7 +40066,17 @@
       },
       "generationTimeMs": 15565,
       "judgingTimeMs": 18536,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 4,
+        "spatialCoverage": 3,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 2,
+        "overall": 3.5,
+        "timestamp": "2026-03-15T11:53:39.794Z"
+      }
     },
     {
       "prompt": {
@@ -41548,7 +41750,17 @@
       },
       "generationTimeMs": 15879,
       "judgingTimeMs": 15762,
-      "error": null
+      "error": null,
+      "humanScores": {
+        "componentSeparation": 4,
+        "colorUsage": 4,
+        "detailDensity": 3,
+        "spatialCoverage": 5,
+        "pixelArtDiscipline": 4,
+        "promptAdherence": 3,
+        "overall": 3.8,
+        "timestamp": "2026-03-15T11:53:54.386Z"
+      }
     }
   ],
   "summary": {
