@@ -4,8 +4,14 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const { DIMENSION_RUBRICS } = require(path.join(__dirname, '..', '..', 'eval', 'judge.js'));
 
 const RESULTS_DIR = path.join(__dirname, '..', '..', 'eval', 'results');
+
+// GET /api/rubrics — return current dimension rubrics
+router.get('/rubrics', (req, res) => {
+  res.json({ dimensions: DIMENSION_RUBRICS });
+});
 
 // GET /api/eval/reports — list all eval reports
 router.get('/eval/reports', (req, res) => {

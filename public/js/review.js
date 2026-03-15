@@ -1,69 +1,28 @@
 'use strict';
 
 // ---------------------------------------------------------------------------
-// Dimension rubrics (hardcoded from eval/judge.js since plain JS can't import)
+// Dimension rubrics — fetched from /api/rubrics at runtime (synced with judge.js)
 // ---------------------------------------------------------------------------
 
-const DIMENSION_RUBRICS = {
-  componentSeparation: {
-    name: 'Component Separation',
-    description: 'Are expected parts visually distinct? Score relative to what the subject demands.',
-    anchors: {
-      1: 'Undifferentiated mass, no expected parts identifiable.',
-      2: 'Multi-part: parts overlap/share colors. Simple: form too broken up.',
-      3: 'Multi-part: components distinguishable but boundaries unclear. Simple: mostly cohesive but artifacts.',
-      4: 'Multi-part: most components clearly separated. Simple: reads cleanly as intended object.',
-      5: 'Multi-part: every component has own color family and crisp boundaries. Simple: immediately recognizable.',
-    },
-  },
-  colorUsage: {
-    name: 'Color Usage',
-    description: 'Are colors used effectively? Do they create readable depth and form?',
-    anchors: {
-      1: 'Only 1-2 colors, no shading. Flat and unreadable.',
-      2: 'Few colors, poorly used — low contrast, no shading layers.',
-      3: 'Adequate variety with some shading, but inconsistent depth.',
-      4: 'Good variety with clear shading creating readable depth. Cohesive palette.',
-      5: 'Excellent palette with 3+ shade layers, strong contrast, every color serves the visual.',
-    },
-  },
-  detailDensity: {
-    name: 'Detail Density',
-    description: 'How much fine detail is present? Small shapes, textures, highlights?',
-    anchors: {
-      1: 'Fewer than 10 commands, only large rectangles.',
-      2: 'Basic shapes only (10-20 commands), no fine details.',
-      3: 'Moderate detail (20-40 commands), some small accents.',
-      4: 'Good detail (40-60 commands), textures and highlights.',
-      5: 'Rich detail (60+ commands), fine textures throughout.',
-    },
-  },
-  spatialCoverage: {
-    name: 'Spatial Coverage',
-    description: 'Does the sprite fill the grid appropriately?',
-    anchors: {
-      1: 'Less than 20% coverage — mostly transparent.',
-      2: '20-40% — too small or off-center.',
-      3: '40-60% — decent but noticeable gaps.',
-      4: '60-80% — fills most of the grid well.',
-      5: '80%+ — fills edge-to-edge, well-centered.',
-    },
-  },
-  promptAdherence: {
-    name: 'Prompt Adherence',
-    description: 'Does the visual result look like what was requested? Judge the rendered pixels, not intent. Could someone who hasn\'t seen the prompt identify the subject?',
-    anchors: {
-      1: 'No visual resemblance — can\'t guess the subject from the pixels.',
-      2: 'General category guessable but specific subject wrong or easily mistaken for something else.',
-      3: 'Subject somewhat recognizable but ambiguous or missing key details from the prompt.',
-      4: 'Subject clearly matches — a person would likely guess correctly. Minor details may be missing.',
-      5: 'Could confidently identify exact subject and specific features from pixels alone.',
-    },
-  },
-};
-
-const DIMENSIONS = Object.keys(DIMENSION_RUBRICS);
+let DIMENSION_RUBRICS = {};
+let DIMENSIONS = [];
 const PIXEL_SCALE = 8;
+
+async function fetchRubrics() {
+  try {
+    const res = await fetch('/api/rubrics');
+    const data = await res.json();
+    DIMENSION_RUBRICS = data.dimensions || {};
+    DIMENSIONS = Object.keys(DIMENSION_RUBRICS);
+  } catch (err) {
+    console.error('Failed to fetch rubrics, using fallback:', err);
+    // Minimal fallback so the page doesn't break entirely
+    DIMENSIONS = ['componentSeparation', 'colorUsage', 'detailDensity', 'spatialCoverage', 'pixelArtDiscipline', 'promptAdherence'];
+    for (const d of DIMENSIONS) {
+      DIMENSION_RUBRICS[d] = { name: d, description: '', anchors: { 1: '', 2: '', 3: '', 4: '', 5: '' } };
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // State
@@ -544,6 +503,7 @@ function makeReportOption(r) {
 }
 
 async function init() {
+  await fetchRubrics();
   reportList = await fetchReports();
 
   reportSelect.innerHTML = '';

@@ -74,9 +74,20 @@ function extractJSON(text) {
   throw new Error('Could not extract JSON from LLM response:\n' + text.slice(0, 500));
 }
 
-async function callOpenRouter(systemPrompt, userMessage, modelOverride) {
+async function callOpenRouter(systemPrompt, userMessage, modelOverride, imageBase64) {
   const apiKey = getApiKey();
   const model = modelOverride || getModel();
+
+  // When imageBase64 is provided, user message becomes a content array with text + image
+  let userContent;
+  if (imageBase64) {
+    userContent = [
+      { type: 'text', text: userMessage },
+      { type: 'image_url', image_url: { url: `data:image/png;base64,${imageBase64}` } },
+    ];
+  } else {
+    userContent = userMessage;
+  }
 
   const response = await fetch(OPENROUTER_ENDPOINT, {
     method: 'POST',
@@ -88,7 +99,7 @@ async function callOpenRouter(systemPrompt, userMessage, modelOverride) {
       model,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
+        { role: 'user', content: userContent },
       ],
     }),
   });

@@ -1,11 +1,12 @@
 'use strict';
 
-const DIMENSIONS = ['componentSeparation', 'colorUsage', 'detailDensity', 'spatialCoverage', 'promptAdherence'];
+const DIMENSIONS = ['componentSeparation', 'colorUsage', 'detailDensity', 'spatialCoverage', 'pixelArtDiscipline', 'promptAdherence'];
 const DIM_NAMES = {
   componentSeparation: 'Comp Sep',
   colorUsage: 'Color',
   detailDensity: 'Detail',
   spatialCoverage: 'Spatial',
+  pixelArtDiscipline: 'Pixel Art',
   promptAdherence: 'Prompt',
 };
 const PIXEL_SCALE = 4;
@@ -94,7 +95,7 @@ async function init() {
 
   const container = document.getElementById('comparison-container');
 
-  // Collect all unique prompts across all reports (preserving order from the most recent report)
+  // Collect all unique prompts across all reports, counting how many rounds each appears in
   const seenPrompts = new Set();
   const prompts = [];
   // Start with the newest report (most prompts), then fill in from older ones
@@ -103,10 +104,22 @@ async function init() {
       const text = r.prompt.prompt;
       if (!seenPrompts.has(text)) {
         seenPrompts.add(text);
-        prompts.push({ text, category: r.prompt.category || '' });
+        prompts.push({ text, category: r.prompt.category || '', roundCount: 0 });
       }
     }
   }
+
+  // Count how many rounds each prompt appears in
+  for (const prompt of prompts) {
+    for (const report of reports) {
+      if (report.results.some(r => r.prompt.prompt === prompt.text)) {
+        prompt.roundCount++;
+      }
+    }
+  }
+
+  // Sort: most generations first, then alphabetically for ties
+  prompts.sort((a, b) => b.roundCount - a.roundCount || a.text.localeCompare(b.text));
 
   // Build comparison rows
   for (const prompt of prompts) {
@@ -118,17 +131,24 @@ async function init() {
     header.className = 'comp-prompt-header';
     header.innerHTML = `
       <span class="comp-prompt-text">${prompt.text}</span>
-      ${prompt.category ? `<span class="comp-prompt-category">${prompt.category}</span>` : ''}
+      <span class="comp-prompt-meta">
+        ${prompt.roundCount}/${reports.length} rounds
+        ${prompt.category ? `<span class="comp-prompt-category">${prompt.category}</span>` : ''}
+      </span>
     `;
     row.appendChild(header);
 
-    // Rounds
+    // Rounds — only show rounds where this prompt exists
     const roundsDiv = document.createElement('div');
     roundsDiv.className = 'comp-rounds';
 
     for (let ri = 0; ri < reports.length; ri++) {
       const report = reports[ri];
       const result = report.results.find(r => r.prompt.prompt === prompt.text);
+
+      // Skip rounds where this prompt doesn't exist
+      if (!result) continue;
+
       const info = roundLabel(report, ri);
 
       const roundDiv = document.createElement('div');
@@ -143,15 +163,6 @@ async function init() {
       metaDiv.className = 'comp-round-meta';
       metaDiv.textContent = info.meta;
       roundDiv.appendChild(metaDiv);
-
-      if (!result) {
-        const noData = document.createElement('div');
-        noData.className = 'comp-no-data';
-        noData.textContent = 'Prompt not in this run';
-        roundDiv.appendChild(noData);
-        roundsDiv.appendChild(roundDiv);
-        continue;
-      }
 
       if (result.status === 'success' && result.pixels) {
         // Canvas
@@ -205,8 +216,84 @@ async function init() {
     container.appendChild(row);
   }
 
+  // Worst disagreements (from most recent graded report)
+  buildWorstDisagreements(reports);
+
   // Calibration evolution table
   buildCalibrationTable(reports);
+}
+
+function buildWorstDisagreements(reports) {
+  const container = document.getElementById('worst-disagreements-container');
+
+  // Find most recent report with human scores
+  const gradedReport = [...reports].reverse().find(r => r.results.some(res => res.humanScores));
+  if (!gradedReport) {
+    container.innerHTML = '<p class="text-muted">No graded reports yet.</p>';
+    return;
+  }
+
+  // Compute per-sprite total absolute delta
+  const disagreements = [];
+  for (const r of gradedReport.results) {
+    if (r.status !== 'success' || !r.humanScores || !r.scores) continue;
+    const deltas = {};
+    let totalAbsDelta = 0;
+    for (const dim of DIMENSIONS) {
+      const h = r.humanScores[dim];
+      const l = r.scores[dim];
+      if (h == null || l == null) continue;
+      deltas[dim] = h - l; // positive = LLM under-scored
+      totalAbsDelta += Math.abs(h - l);
+    }
+    disagreements.push({
+      promptText: r.prompt.prompt || r.prompt,
+      deltas,
+      totalAbsDelta,
+    });
+  }
+
+  disagreements.sort((a, b) => b.totalAbsDelta - a.totalAbsDelta);
+  const top5 = disagreements.slice(0, 5);
+
+  if (top5.length === 0) {
+    container.innerHTML = '<p class="text-muted">No scored sprites found.</p>';
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'comp-cal-table';
+
+  const thead = document.createElement('thead');
+  let headerHTML = '<tr><th>Prompt</th>';
+  for (const dim of DIMENSIONS) {
+    headerHTML += `<th>${DIM_NAMES[dim]}</th>`;
+  }
+  headerHTML += '<th>Total</th></tr>';
+  thead.innerHTML = headerHTML;
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (const item of top5) {
+    const tr = document.createElement('tr');
+    let cells = `<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.promptText}">${item.promptText}</td>`;
+    for (const dim of DIMENSIONS) {
+      const d = item.deltas[dim] || 0;
+      const absd = Math.abs(d);
+      // red = LLM over-scored (delta negative, meaning human < llm)
+      // blue = LLM under-scored (delta positive, meaning human > llm)
+      let color = '';
+      if (d < 0) color = 'color: var(--status-error, #c0392b);';
+      else if (d > 0) color = 'color: var(--accent-teal, #2a7b6f);';
+      const sign = d > 0 ? '+' : '';
+      cells += `<td style="${color} font-weight:${absd > 1 ? '700' : '400'}">${sign}${d}</td>`;
+    }
+    cells += `<td style="font-weight:700">${item.totalAbsDelta}</td>`;
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  container.appendChild(table);
 }
 
 function buildCalibrationTable(reports) {

@@ -23,6 +23,9 @@ RUN if [ -f tools/picts2dsk.c ]; then \
 COPY server/ server/
 RUN cd server && npm install
 
+# Copy eval harness (judge.js needed by /api/rubrics endpoint)
+COPY eval/ eval/
+
 # Copy static frontend
 COPY public/ public/
 

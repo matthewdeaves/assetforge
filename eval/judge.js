@@ -2,6 +2,7 @@
 
 const path = require('path');
 const { callOpenRouter, extractJSON } = require(path.join(__dirname, '..', 'server', 'services', 'llm.js'));
+const { renderToPNG } = require(path.join(__dirname, 'png-encoder.js'));
 
 // ---------------------------------------------------------------------------
 // Per-dimension rubrics with explicit score-level anchors (1-5 Likert scale)
@@ -52,6 +53,17 @@ const DIMENSION_RUBRICS = {
       5: 'Sprite covers 80%+ — fills the grid edge-to-edge with only a thin transparent border, well-centered.',
     },
   },
+  pixelArtDiscipline: {
+    name: 'Pixel Art Discipline',
+    description: 'Does the sprite follow pixel art conventions? Evaluate edge quality, intentionality of pixel placement, and absence of artefacts.',
+    anchors: {
+      1: 'Smooth gradients, blurry edges, shapes that require higher resolution to read. Anti-aliased curves from circle renderer visible throughout.',
+      2: 'Several orphaned stray pixels, unintentional blurring on curves. Shapes attempted but don\'t resolve cleanly at this resolution.',
+      3: 'Mostly follows conventions but 2-3 areas with poorly resolved edges or stray pixels breaking the silhouette.',
+      4: 'Shapes read cleanly, edges appear intentional, minimal stray pixels. Curves are properly stepped.',
+      5: 'Every pixel placement appears intentional. Curves properly stepped, no artefacts, clean silhouette, no orphaned pixels.',
+    },
+  },
   promptAdherence: {
     name: 'Prompt Adherence',
     description: `Does the visual result look like what was requested? You MUST judge what the rendered pixels look like to a person — NOT what the drawing commands intended to create. This is the most common error: the commands may describe a tank, but if the rendered result looks like a green rectangle with some lines, that is NOT a tank.
@@ -76,7 +88,7 @@ Do NOT give credit for intent. Only score what is visually present in the pixels
       1: 'The rendered sprite bears no visual resemblance to the prompt — a person could not guess the intended subject from the pixels.',
       2: 'The general category might be guessable (e.g., "some kind of vehicle") but the specific subject is wrong or unrecognizable. Key features mentioned in the prompt are absent or the result could easily be mistaken for something else entirely.',
       3: 'The subject is somewhat recognizable but missing important details mentioned in the prompt, OR the subject is ambiguous — a person might guess correctly but with low confidence. Examples: a tank with no visible turret or tracks, a knight where the figure doesn\'t read as a person, a car where you can\'t tell front from back.',
-      4: 'The subject clearly matches the prompt with most requested features visually present and identifiable. A person unfamiliar with the prompt would likely guess the correct subject. Minor details may be missing but the overall impression is correct.',
+      4: 'The subject\'s SILHOUETTE clearly matches the prompt — the outline shape reads correctly (e.g., a tank has a distinct hull+turret profile, a truck has cab+bed). Most requested features are visually present and identifiable. A person unfamiliar with the prompt would likely guess the correct subject. Minor details may be missing but the overall shape and impression are correct.',
       5: 'A person could confidently identify the exact subject and its specific features from the pixels alone — subject, orientation, distinguishing features, and key details from the prompt are all visually unambiguous.',
     },
   },
@@ -85,11 +97,55 @@ Do NOT give credit for intent. Only score what is visually present in the pixels
 const DIMENSIONS = Object.keys(DIMENSION_RUBRICS);
 
 // ---------------------------------------------------------------------------
+// ASCII pixel grid for judge context
+// ---------------------------------------------------------------------------
+
+function pixelsToAscii(pixels) {
+  const chars = [];
+  // Index 0 → · (transparent), 1-9 → '1'-'9', 10-15 → 'A'-'F', 16+ → 'G'-'Z' then 'a'-'z'
+  for (let y = 0; y < pixels.length; y++) {
+    let row = '';
+    for (let x = 0; x < pixels[y].length; x++) {
+      const idx = pixels[y][x];
+      if (idx === 0) {
+        row += '·';
+      } else if (idx <= 9) {
+        row += String(idx);
+      } else if (idx <= 15) {
+        row += String.fromCharCode(55 + idx); // 10→'A', 15→'F'
+      } else if (idx <= 41) {
+        row += String.fromCharCode(55 + idx); // 16→'G', 41→'Z'  (16+55=71='G')
+      } else {
+        row += String.fromCharCode(idx + 55); // overflow — same formula
+      }
+    }
+    chars.push(row);
+  }
+  return chars.join('\n');
+}
+
+// ---------------------------------------------------------------------------
 // Build per-dimension judge prompt using XML structure
 // ---------------------------------------------------------------------------
 
 function buildJudgePrompt(dimension) {
   const rubric = DIMENSION_RUBRICS[dimension];
+
+  // Dimension-specific preCheck instructions
+  let preCheck = '';
+  if (dimension === 'promptAdherence') {
+    preCheck = `
+0. FIRST IMPRESSION: Look at the rendered sprite image (or ASCII grid). Write what you honestly see:
+   "Looking at these pixels with no context, I see: [description]."
+   If your first impression does not match the prompt subject, the score CANNOT exceed 3.
+`;
+  } else if (dimension === 'componentSeparation') {
+    preCheck = `
+0. PART INVENTORY: Identify how many distinct parts the subject should have.
+   For each expected part, verify it has its OWN visible colour region in the rendered pixels.
+   If adjacent parts share the same colour with no visible boundary, the score CANNOT exceed 3.
+`;
+  }
 
   return `You are evaluating a single quality dimension of a generated pixel art sprite.
 
@@ -106,7 +162,7 @@ ${Object.entries(rubric.anchors)
 </rubric>
 
 <instructions>
-1. First, analyze the drawing commands and statistics in <analysis> tags. Consider what the commands build up visually — what shapes are layered, how colors are distributed, what details are present.
+${preCheck}1. First, analyze the rendered sprite image and ASCII pixel grid along with the drawing commands and statistics in <analysis> tags. Focus on what the sprite LOOKS LIKE as rendered pixels — not just what the commands intended to create.
 2. Then, compare your analysis against each rubric level to find the best match.
 3. Finally, return your score as a JSON object.
 </instructions>
@@ -124,7 +180,7 @@ After your analysis, return a JSON object with exactly these fields:
 // Build the user message with sprite data in XML structure
 // ---------------------------------------------------------------------------
 
-function buildUserMessage(prompt, commands, stats, hint, width, height) {
+function buildUserMessage(prompt, commands, stats, hint, width, height, pixels) {
   const parts = [
     '<sprite_evaluation>',
     `<original_prompt>${prompt}</original_prompt>`,
@@ -143,6 +199,18 @@ function buildUserMessage(prompt, commands, stats, hint, width, height) {
     `  Total commands: ${stats.commandCount}`,
     `  Commands by type: ${JSON.stringify(stats.commandsByType)}`,
     '</pixel_statistics>',
+  );
+
+  // ASCII pixel grid (rendered appearance)
+  if (pixels) {
+    parts.push(
+      '<rendered_pixels>',
+      pixelsToAscii(pixels),
+      '</rendered_pixels>',
+    );
+  }
+
+  parts.push(
     '<drawing_commands>',
     JSON.stringify(commands, null, 2),
     '</drawing_commands>',
@@ -188,11 +256,11 @@ function computeCodeBasedScores(stats) {
 // Judge a single dimension via LLM
 // ---------------------------------------------------------------------------
 
-async function judgeDimension(dimension, prompt, commands, stats, hint, width, height, judgeModel) {
+async function judgeDimension(dimension, prompt, commands, stats, hint, width, height, judgeModel, pixels, imageBase64) {
   const systemPrompt = buildJudgePrompt(dimension);
-  const userMessage = buildUserMessage(prompt, commands, stats, hint, width, height);
+  const userMessage = buildUserMessage(prompt, commands, stats, hint, width, height, pixels);
 
-  const responseText = await callOpenRouter(systemPrompt, userMessage, judgeModel);
+  const responseText = await callOpenRouter(systemPrompt, userMessage, judgeModel, imageBase64);
   const parsed = extractJSON(responseText);
 
   const score = typeof parsed.score === 'number'
@@ -217,15 +285,28 @@ async function judgeDimension(dimension, prompt, commands, stats, hint, width, h
  * @param {string|null} judgeModel - Model to use for judging
  * @param {number} width - Grid width in pixels
  * @param {number} height - Grid height in pixels
+ * @param {number[][]|null} pixels - Rasterized pixel grid (for ASCII grid + PNG vision)
+ * @param {{r:number,g:number,b:number}[]|null} palette - Palette colours (for PNG vision)
  * @returns {object} Quality scores
  */
-async function judgeSprite(prompt, commands, stats, hint, judgeModel, width, height) {
+async function judgeSprite(prompt, commands, stats, hint, judgeModel, width, height, pixels, palette) {
   const codeScores = computeCodeBasedScores(stats);
+
+  // Render PNG for vision (if pixel data available)
+  let imageBase64 = null;
+  if (pixels && palette) {
+    try {
+      const pngBuffer = renderToPNG(pixels, palette);
+      imageBase64 = pngBuffer.toString('base64');
+    } catch (err) {
+      console.warn(`Warning: PNG rendering failed, continuing text-only: ${err.message}`);
+    }
+  }
 
   // LLM judges each dimension independently
   // spatialCoverage and detailDensity use code-based scores (deterministic, fast)
   // componentSeparation, colorUsage, promptAdherence require LLM judgment
-  const llmDimensions = ['componentSeparation', 'colorUsage', 'promptAdherence'];
+  const llmDimensions = ['componentSeparation', 'colorUsage', 'pixelArtDiscipline', 'promptAdherence'];
 
   const scores = {
     spatialCoverage: codeScores.spatialCoverage,
@@ -235,12 +316,14 @@ async function judgeSprite(prompt, commands, stats, hint, judgeModel, width, hei
   };
 
   try {
-    // Run LLM judges sequentially (respects rate limits)
-    for (const dim of llmDimensions) {
-      const result = await judgeDimension(dim, prompt, commands, stats, hint, width, height, judgeModel);
-      scores[dim] = result.score;
-      scores[`${dim}Reasoning`] = result.reasoning;
-    }
+    // Run LLM judges in parallel (3 concurrent calls well within rate limits)
+    const llmResults = await Promise.all(
+      llmDimensions.map(dim => judgeDimension(dim, prompt, commands, stats, hint, width, height, judgeModel, pixels, imageBase64))
+    );
+    llmDimensions.forEach((dim, i) => {
+      scores[dim] = llmResults[i].score;
+      scores[`${dim}Reasoning`] = llmResults[i].reasoning;
+    });
 
     // Compute overall as average of all 5 dimensions
     scores.overall = DIMENSIONS.reduce((sum, d) => sum + (scores[d] || 0), 0) / DIMENSIONS.length;
@@ -255,6 +338,7 @@ async function judgeSprite(prompt, commands, stats, hint, judgeModel, width, hei
       colorUsage: 0,
       detailDensity: codeScores.detailDensity,
       spatialCoverage: codeScores.spatialCoverage,
+      pixelArtDiscipline: 0,
       promptAdherence: 0,
       overall: 0,
       reasoning: `Judge failed: ${err.message}`,
@@ -263,4 +347,4 @@ async function judgeSprite(prompt, commands, stats, hint, judgeModel, width, hei
   }
 }
 
-module.exports = { judgeSprite, computeCodeBasedScores, DIMENSIONS, DIMENSION_RUBRICS };
+module.exports = { judgeSprite, computeCodeBasedScores, pixelsToAscii, DIMENSIONS, DIMENSION_RUBRICS };

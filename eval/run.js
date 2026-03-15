@@ -240,6 +240,8 @@ async function runEval(args) {
         judgeModel,
         testPrompt.width,
         testPrompt.height,
+        result.pixels,
+        result.palette,
       );
       result.judgingTimeMs = Date.now() - judgeStart;
 

@@ -10,6 +10,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "express": "latest"
+    "express": "latest",
+    "pngjs": "^7.0.0"
   }
 }
