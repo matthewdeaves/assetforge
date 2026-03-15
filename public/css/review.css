@@ -127,6 +127,18 @@
   border-color: var(--border-light);
 }
 
+.review-dimension.needs-grading {
+  background: var(--status-warning-bg, #fff8e1);
+  border-color: var(--status-warning, #f0a500);
+}
+
+.review-dimension.needs-grading .review-dim-name::after {
+  content: ' (needs grading)';
+  font-weight: 400;
+  font-size: 0.7rem;
+  color: var(--status-warning, #f0a500);
+}
+
 .review-dim-info {
   flex: 1;
   min-width: 0;

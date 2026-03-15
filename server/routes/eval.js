@@ -110,7 +110,9 @@ router.post('/eval/reports/:filename/human-scores', (req, res) => {
 
     for (const entry of scores) {
       if (entry.index >= 0 && entry.index < data.results.length) {
-        data.results[entry.index].humanScores = entry.humanScores;
+        // Merge with existing humanScores (preserve old dimensions, add/update new ones)
+        const existing = data.results[entry.index].humanScores || {};
+        data.results[entry.index].humanScores = { ...existing, ...entry.humanScores };
       }
     }
 

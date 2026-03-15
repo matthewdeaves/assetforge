@@ -37,6 +37,7 @@ let focusedDimIndex = 0;
 let collectedScores = [];   // { index, humanScores } for each graded sprite
 let skippedCount = 0;
 let gradingInProgress = false;
+let regradeMode = false;
 
 // ---------------------------------------------------------------------------
 // DOM refs
@@ -174,8 +175,47 @@ function resetSpriteScores() {
   spriteScores = {};
   DIMENSIONS.forEach(d => spriteScores[d] = null);
   dimensionsEl.querySelectorAll('.review-score-btn').forEach(btn => btn.classList.remove('selected'));
+  dimensionsEl.querySelectorAll('.review-dimension').forEach(el => el.classList.remove('needs-grading'));
   setFocusedDimension(0);
   updateNextButton();
+}
+
+/**
+ * Pre-load existing scores into the UI. Highlights dimensions still missing.
+ * Returns true if any dimension needs grading.
+ */
+function preloadExistingScores(existingHumanScores) {
+  if (!existingHumanScores) return true;
+
+  let firstMissing = -1;
+  DIMENSIONS.forEach((dim, i) => {
+    const score = existingHumanScores[dim];
+    if (score != null && score >= 1 && score <= 5) {
+      // Pre-select this score
+      spriteScores[dim] = score;
+      const dimEl = dimensionsEl.children[i];
+      dimEl.querySelectorAll('.review-score-btn').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.score) === score);
+      });
+      dimEl.classList.remove('needs-grading');
+    } else {
+      // Mark as needing grading
+      const dimEl = dimensionsEl.children[i];
+      dimEl.classList.add('needs-grading');
+      if (firstMissing === -1) firstMissing = i;
+    }
+  });
+
+  // Pre-load notes if present
+  if (existingHumanScores.notes) {
+    document.getElementById('sprite-notes').value = existingHumanScores.notes;
+  }
+
+  // Focus first missing dimension, or first if all present
+  setFocusedDimension(firstMissing >= 0 ? firstMissing : 0);
+  updateNextButton();
+
+  return firstMissing >= 0;
 }
 
 function setFocusedDimension(idx) {
@@ -223,6 +263,11 @@ function showSprite(idx) {
   progressEl.textContent = `Sprite ${idx + 1} of ${successResults.length}`;
   document.getElementById('sprite-notes').value = '';
   resetSpriteScores();
+
+  // When re-grading, pre-load existing scores and highlight missing dimensions
+  if (regradeMode && result.humanScores) {
+    preloadExistingScores(result.humanScores);
+  }
 }
 
 function nextSprite() {
@@ -471,12 +516,13 @@ async function loadReport(filename) {
   startGrading();
 }
 
-function startGrading() {
+function startGrading(isRegrade = false) {
   regradeBanner.style.display = 'none';
   collectedScores = [];
   skippedCount = 0;
   currentIndex = 0;
   gradingInProgress = true;
+  regradeMode = isRegrade;
 
   buildDimensionUI();
   spriteView.style.display = '';
@@ -550,7 +596,7 @@ btnNext.addEventListener('click', nextSprite);
 btnSkip.addEventListener('click', skipSprite);
 btnFinish.addEventListener('click', finishGrading);
 btnViewResults.addEventListener('click', viewExistingResults);
-btnRegrade.addEventListener('click', startGrading);
+btnRegrade.addEventListener('click', () => startGrading(true));
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
