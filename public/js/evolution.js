@@ -1,14 +1,18 @@
 'use strict';
 
-const DIMENSIONS = ['componentSeparation', 'colorUsage', 'detailDensity', 'spatialCoverage', 'promptAdherence'];
+const DIMENSIONS = ['componentSeparation', 'colorUsage', 'detailDensity', 'spatialCoverage', 'pixelArtDiscipline', 'promptAdherence'];
 const DIM_NAMES = {
   componentSeparation: 'Component Separation',
   colorUsage: 'Color Usage',
   detailDensity: 'Detail Density',
   spatialCoverage: 'Spatial Coverage',
+  pixelArtDiscipline: 'Pixel Art Discipline',
   promptAdherence: 'Prompt Adherence',
 };
-const PIXEL_SCALE = 4;
+
+function getPixelScale(width, height) {
+  return Math.min(4, Math.floor(200 / Math.max(width, height)));
+}
 
 async function fetchReports() {
   const res = await fetch('/api/eval/reports');
@@ -26,8 +30,9 @@ function renderSprite(pixels, palette, canvasEl) {
   if (!pixels || !palette) return;
   const height = pixels.length;
   const width = pixels[0].length;
-  canvasEl.width = width * PIXEL_SCALE;
-  canvasEl.height = height * PIXEL_SCALE;
+  const scale = getPixelScale(width, height);
+  canvasEl.width = width * scale;
+  canvasEl.height = height * scale;
   const c = canvasEl.getContext('2d');
   c.clearRect(0, 0, canvasEl.width, canvasEl.height);
   for (let y = 0; y < height; y++) {
@@ -37,7 +42,7 @@ function renderSprite(pixels, palette, canvasEl) {
       const color = palette[idx];
       if (!color) continue;
       c.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-      c.fillRect(x * PIXEL_SCALE, y * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+      c.fillRect(x * scale, y * scale, scale, scale);
     }
   }
 }
@@ -225,30 +230,37 @@ function buildSpriteComparison(reports) {
         canvasWrap.appendChild(canvas);
         roundDiv.appendChild(canvasWrap);
 
-        // Show judge scores (not human — this page uses the calibrated judge)
-        if (result.scores) {
+        // Show scores — human (H:) and LLM (L:) when available
+        if (result.scores || result.humanScores) {
           const scoresDiv = document.createElement('div');
           scoresDiv.className = 'comp-scores';
           for (const dim of DIMENSIONS) {
-            const score = result.scores[dim];
+            const h = result.humanScores ? result.humanScores[dim] : null;
+            const l = result.scores ? result.scores[dim] : null;
+            const divergent = h != null && l != null && Math.abs(h - l) > 1;
             const scoreRow = document.createElement('div');
-            scoreRow.className = 'comp-score-row';
+            scoreRow.className = 'comp-score-row' + (divergent ? ' divergent' : '');
             scoreRow.innerHTML = `
               <span class="comp-score-dim">${DIM_NAMES[dim].split(' ')[0]}</span>
               <span class="comp-score-values">
-                <span class="comp-score-human">${score != null ? score + '/5' : '—'}</span>
+                <span class="comp-score-human">${h != null ? 'H:' + h : ''}</span>
+                <span class="comp-score-llm">${l != null ? 'L:' + l : ''}</span>
               </span>
             `;
             scoresDiv.appendChild(scoreRow);
           }
           // Overall
-          const overall = DIMENSIONS.reduce((s, d) => s + (result.scores[d] || 0), 0) / DIMENSIONS.length;
+          const overallL = result.scores ? DIMENSIONS.reduce((s, d) => s + (result.scores[d] || 0), 0) / DIMENSIONS.length : null;
+          const overallH = result.humanScores ? DIMENSIONS.reduce((s, d) => s + (result.humanScores[d] || 0), 0) / DIMENSIONS.length : null;
           const overallRow = document.createElement('div');
           overallRow.className = 'comp-score-row';
           overallRow.style.fontWeight = '700';
           overallRow.innerHTML = `
             <span class="comp-score-dim">Overall</span>
-            <span class="comp-score-values"><span class="comp-score-human">${overall.toFixed(1)}/5</span></span>
+            <span class="comp-score-values">
+              <span class="comp-score-human">${overallH != null ? 'H:' + overallH.toFixed(1) : ''}</span>
+              <span class="comp-score-llm">${overallL != null ? 'L:' + overallL.toFixed(1) : ''}</span>
+            </span>
           `;
           scoresDiv.appendChild(overallRow);
           roundDiv.appendChild(scoresDiv);
