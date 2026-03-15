@@ -94,12 +94,19 @@ async function init() {
 
   const container = document.getElementById('comparison-container');
 
-  // Get prompt list from first report
-  const prompts = reports[0].results.map((r, i) => ({
-    text: r.prompt.prompt,
-    category: r.prompt.category || '',
-    index: i,
-  }));
+  // Collect all unique prompts across all reports (preserving order from the most recent report)
+  const seenPrompts = new Set();
+  const prompts = [];
+  // Start with the newest report (most prompts), then fill in from older ones
+  for (const report of [...reports].reverse()) {
+    for (const r of report.results) {
+      const text = r.prompt.prompt;
+      if (!seenPrompts.has(text)) {
+        seenPrompts.add(text);
+        prompts.push({ text, category: r.prompt.category || '' });
+      }
+    }
+  }
 
   // Build comparison rows
   for (const prompt of prompts) {
@@ -121,7 +128,7 @@ async function init() {
 
     for (let ri = 0; ri < reports.length; ri++) {
       const report = reports[ri];
-      const result = report.results[prompt.index];
+      const result = report.results.find(r => r.prompt.prompt === prompt.text);
       const info = roundLabel(report, ri);
 
       const roundDiv = document.createElement('div');
@@ -137,7 +144,16 @@ async function init() {
       metaDiv.textContent = info.meta;
       roundDiv.appendChild(metaDiv);
 
-      if (result && result.status === 'success' && result.pixels) {
+      if (!result) {
+        const noData = document.createElement('div');
+        noData.className = 'comp-no-data';
+        noData.textContent = 'Prompt not in this run';
+        roundDiv.appendChild(noData);
+        roundsDiv.appendChild(roundDiv);
+        continue;
+      }
+
+      if (result.status === 'success' && result.pixels) {
         // Canvas
         const canvasWrap = document.createElement('div');
         canvasWrap.className = 'comp-canvas-wrapper';
@@ -178,7 +194,7 @@ async function init() {
       } else {
         const noData = document.createElement('div');
         noData.className = 'comp-no-data';
-        noData.textContent = result ? 'Generation failed' : 'No data';
+        noData.textContent = 'Generation failed';
         roundDiv.appendChild(noData);
       }
 
